@@ -1,7 +1,6 @@
 flask
 gunicorn
 requests
-os
 dotenv
 pymongo
 uuid
