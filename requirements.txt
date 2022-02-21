@@ -1,0 +1,8 @@
+flask
+gunicorn
+requests
+import os
+dotenv
+pymongo
+uuid
+random
