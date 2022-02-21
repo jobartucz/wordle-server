@@ -1,7 +1,6 @@
 flask
 gunicorn
 requests
-dotenv
 pymongo
 uuid
 random
