@@ -37,6 +37,7 @@ def post_something():
             "METHOD" : "POST"
         })
     else:
+        return request.form
         return jsonify({
             "ERROR": "no name found, please send a name."
         })
