@@ -6,8 +6,9 @@ from pymongo import MongoClient
 from uuid import uuid4
 from random import choice
 
-# Load config from a .env file:
+print()
 
+# Load config from a .env file:
 load_dotenv()
 
 MONGODB_URI = os.environ['MONGODB_URI']
@@ -25,7 +26,7 @@ ids = set()
 userwords = {}
 nicknames = {}
 for user in info.find():
-   print(f"adding: {user}")
+   # print(f"adding: {user}")
    ids.add(user['userid'])
    userwords[user['userid']] = user['words']
    if user['nickname'] not in nicknames:
@@ -38,17 +39,28 @@ guesses = set(wordlist['guesses'])
 answers = set(wordlist['answers'])
 wordict = dict(wordlist['wordict'])
 
-print(len(guesses), len(answers))
+# print(len(guesses), len(answers))
 
 
 def newid(nickname = "Nickname"):
    
-   newid = uuid4()
+   newuser = {}
+
+   newid = str(uuid4())
    print(newid)
    ids.add(newid)
    if nickname not in nicknames:
       nicknames[nickname] = []   
-   nicknames[nickname].append(user['userid'])
+   nicknames[nickname].append(newid)
+
+   newuser['userid'] = newid
+   newuser['nickname'] = nickname
+   newuser['words'] = {}
+
+   x = info.insert_one(newuser)
+
+   print(f"inserted: {x.inserted_id}")
+
    return newid
 
 def getmyids(nickname):
@@ -69,6 +81,11 @@ def setnickname(id, nickname):
       else:
          nicknames[nickname].append(id)
 
+   # change the user's nickname in the database
+   u = info.find_one({"userid":id}) # find the user in the database
+   u['nickname'] = nickname # add the new wordid to the user's list
+   newvalues = { "$set": u }
+   info.update_one({"userid":id}, newvalues)
 
 
 def newword(id):
@@ -85,16 +102,30 @@ def newword(id):
    newword = choice(choicelist)
 
    print(f"userid = {id}, newword = {newword}")
-   h = uuid4() # hashing won't work for "closeness"
+   h = str(uuid4()) # hashing won't work for "closeness"
 
    # add the word to this user's list
-   u = info.find_one({"userid":id})
-   # print(u)
-   u['words'][newword] = []
+   userwords[user['userid']][h] = newword
+
+   # add the word to this user's list in the database
+   u = info.find_one({"userid":id}) # find the user in the database
+   u['words'][h] = [0,False] # add the new wordid to the user's list
    newvalues = { "$set": u }
    info.update_one({"userid":id}, newvalues)
    # u = info.find_one({"userid":id})
    # print(u)
+
+
+   # add the word to the wordict
+   wordict[h] = newword
+
+   # add the word to the wordict in the database
+   u = words.find_one() 
+   u['wordict'][h] = newword
+   newvalues = { "$set": u }
+   myquery = { "id": 1 }
+   words.update_one(myquery,newvalues)
+
    return h
 
 
@@ -108,32 +139,56 @@ def getmywords(id):
 
 def guess(userid, wordid, guess):
 
+   print(f"guessing {userid} {wordid} {guess}")
+
    if wordid not in userwords[userid].keys():
-      print("Hey, that's not your word!")
+      print("Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words")
       return 0
 
    if len(guess) != 5:
       print("Hey, that's not a 5-letter word!")
       return 0
 
-   returnstring = ""
+   numguesses, found = userwords[userid][wordid]
+   # print(f"{numguesses}, {found}")
+   if found == True:
+      print("Hey, you already found this word!")
+      return numguesses
+   else:
+      numguesses += 1
+
    answer = wordict[wordid]
-   for i, c in enumerate(guess.lower()):
-      # print(i, c)
-      if c.isalpha() == False:
-         print("Hey, that's not a letter!")
-         return 0
-      # print(i, c, answer[i])
-      if c == answer[i]:
-         returnstring += "1"
-      elif c in answer:
-         returnstring += "2"
-      else:
-         returnstring += "3"
+   if answer == guess.lower(): # they guessed it
+      found = True
+      returnstring = "11111"
+   else:
+      returnstring = ""
+      for i, c in enumerate(guess.lower()):
+         # print(i, c)
+         if c.isalpha() == False:
+            print("Hey, that's not a letter!")
+            return 0
+         # print(i, c, answer[i])
+         if c == answer[i]:
+            returnstring += "1"
+         elif c in answer:
+            returnstring += "2"
+         else:
+            returnstring += "3"
+
+   # add the guess to this user's list in the database
+   u = info.find_one({"userid":userid}) # find the user in the database
+   # print(f"{numguesses}, {found}")
+   u['words'][wordid] = [numguesses,found] # add the new wordid to the user's list
+   newvalues = { "$set": u }
+   info.update_one({"userid":userid}, newvalues)
+
 
    return returnstring
 
 
-print(getmywords("JAB"))
-print(guess("JAB",'1',"mower"))
-print(getmyids('Mr. B'))
+# print(newword("JAB"))
+print(guess("JAB",'2',"timer"))
+# print(getmyids('Mr. B'))
+# setnickname("JAB", "Mr. Bartucz")
+# print(newid("jobartucz"))
