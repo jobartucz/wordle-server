@@ -44,9 +44,32 @@ print(len(guesses), len(answers))
 def newid(nickname = "Nickname"):
    
    newid = uuid4()
-   ids.add(newid)
    print(newid)
+   ids.add(newid)
+   if nickname not in nicknames:
+      nicknames[nickname] = []   
+   nicknames[nickname].append(user['userid'])
    return newid
+
+def getmyids(nickname):
+
+   if nickname in nicknames:
+      return nicknames[nickname]
+   else:
+      return []
+
+def setnickname(id, nickname):
+   if id not in ids:
+      print("Not a valid ID, please use the 'newid' command to generate a new id")
+      return -1
+
+   if nickname in nicknames:
+      if id in nicknames[nickname]:
+         print("This ID is already connected to this Nickname")
+      else:
+         nicknames[nickname].append(id)
+
+
 
 def newword(id):
 
@@ -109,13 +132,6 @@ def guess(userid, wordid, guess):
          returnstring += "3"
 
    return returnstring
-
-def getmyids(nickname):
-
-   if nickname in nicknames:
-      return nicknames[nickname]
-   else:
-      return []
 
 
 print(getmywords("JAB"))
