@@ -1,7 +1,6 @@
 import datetime   # This will be needed later
 import os
 from dotenv import load_dotenv
-from pymysql import NULL
 from pymongo import MongoClient
 from uuid import uuid4
 from random import choice
