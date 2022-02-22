@@ -1,10 +1,11 @@
 # app.py
+import os
 from random import choice
 from re import S
 from uuid import uuid4
 from pymongo import MongoClient
 from dotenv import load_dotenv
-import os
+from bson.json_util import dumps
 from flask import Flask, request, jsonify
 app = Flask(__name__)
 
@@ -238,8 +239,8 @@ def post_command():
     if command == "newid":
         return jsonify(newid(rj.get('nickname')))
 
-    if command == "stats":
-        return jsonify(info.find())
+    if command == "allstats":
+        return jsonify(dumps(list(info.find()), indent=2))
 
     # the rest of the commands all require a userid
     userid = rj.get('userid')
