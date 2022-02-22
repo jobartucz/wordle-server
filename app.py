@@ -226,10 +226,11 @@ def post_command():
         })
 
     if command == "newid":
+
         if rj.get('nickname'):
-            return jsonify("id:" + newid(rj.get('nickname')))
+            return jsonify({"userid": newid(rj.get('nickname'))})
         else:
-            return jsonify("id:" + newid())
+            return jsonify({"userid": newid()})
 
     userid = rj.get('userid')
     if not userid:
