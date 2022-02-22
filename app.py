@@ -222,7 +222,8 @@ def stats(userid):
 
 
 commands = set(["newid", "getmyids", "setnickname",
-                "newword", "getmywords", "guess", "stats", "allstats"])
+                "newword", "getmywords", "guess",
+                "stats", "allstats", "allwords"])
 
 
 @app.route('/', methods=['POST'])
@@ -246,6 +247,9 @@ def post_command():
             allstats[u['userid']]['words'] = u['words']
 
         return jsonify(allstats)
+
+    if command == "allwords":
+        return jsonify({"answers": list(answers)})
 
     # the rest of the commands all require a userid
     userid = rj.get('userid')
@@ -309,7 +313,8 @@ def index():
     homepage += "<li><strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this nickname</li>\n"
     homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
     homepage += "<li><strong>stats</strong> takes a 'userid' and returns your average number of guesses for words you have completed</li>\n"
-    homepage += "<li><strong>allstats</strong> returns the kitchen sink</li>\n"
+    homepage += "<li><strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found</li>\n"
+    homepage += "<li><strong>allwords</strong> returns a list of all possible words</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard</h2>\n"
