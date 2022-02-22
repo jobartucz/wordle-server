@@ -312,7 +312,7 @@ def index():
     homepage += "<li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>\n"
     homepage += "<li><strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this nickname</li>\n"
     homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
-    homepage += "<li><strong>stats</strong> takes a 'userid' and returns your average number of guesses for words you have completed</li>\n"
+    homepage += "<li><strong>stats</strong> takes a 'userid' and returns the average number of guesses for words completed</li>\n"
     homepage += "<li><strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found</li>\n"
     homepage += "<li><strong>allwords</strong> returns a list of all possible words</li>\n"
     homepage += "</ul>\n"
