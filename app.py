@@ -282,7 +282,20 @@ def post_command():
 
 @app.route('/')
 def index():
-    return "<h1>Welcome to the wordle server!!</h1>"
+    homepage = "<h1>Welcome to the wordle server!!</h1>\n"
+    homepage += "<h2>This API takes JSON-formatted post only</h2>\n"
+    homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
+    homepage += "<h2>Commands</h2>\n"
+    homepage += "<ul>\n"
+    homepage += "<li><strong>newid</strong> takes an optional 'nickname' argument, returns a new unique userid</li>\n"
+    homepage += "<li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>\n"
+    homepage += "<li><strong>getmyids</strong> takes only a 'userid' argument and returns a list of all userids that have this nickname</li>\n"
+    homepage += "<li><strong>newword</strong> takes only a 'userid' and returns a unique wordid to use when guessing</li>\n"
+    homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
+    homepage += "<li><strong>guess</strong> takes a 'userid', a 'wordid', and a 'guess'. Returns a 5-digit 'result' where each digit is '1' - correct letter in correct position, '2' - correct letter in wrong position, '3' - letter not in word</li>\n"
+    homepage += "<li><strong>stats</strong> takes a 'userid' and returns your average number of guesses for words you have completed</li>\n"
+    homepage += "</ul>\n"
+    return homepage
 
 
 if __name__ == '__main__':
