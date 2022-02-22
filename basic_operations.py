@@ -188,8 +188,28 @@ def guess(userid, wordid, guess):
     return returnstring
 
 
+def stats(userid):
+    userstats = {}
+
+    numsolved = 0
+    totalguesses = 0
+    for wordid, status in userwords[userid].items():
+        if status[1] == True:
+            numsolved += 1
+            totalguesses += status[0]
+
+    if numsolved == 0:
+        userstats['numsolved'] = 0
+        userstats['average'] = 0
+    else:
+        userstats['numsolved'] = numsolved
+        userstats['average'] = totalguesses / numsolved
+
+    return userstats
+
+
 # print(newword("JAB"))
-print(guess("JAB", '2', "timer"))
+print(stats("JAB"))
 # print(getmyids('Mr. B'))
 # setnickname("JAB", "Mr. Bartucz")
 # print(newid("jobartucz"))

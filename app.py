@@ -192,10 +192,27 @@ def guess(userid, wordid, guess):
 
 
 def stats(userid):
+    userstats = {}
+
+    numsolved = 0
+    totalguesses = 0
+    for wordid, status in userwords[userid].items():
+        if status[1] == True:
+            numsolved += 1
+            totalguesses += status[0]
+
+    if numsolved == 0:
+        userstats['numsolved'] = 0
+        userstats['average'] = 0
+    else:
+        userstats['numsolved'] = numsolved
+        userstats['average'] = totalguesses / numsolved
+
+    return userstats
 
 
 commands = set(["newid", "getmyids", "setnickname",
-                "newword", "getmywords", "guess"])
+                "newword", "getmywords", "guess", "stats"])
 
 
 @app.route('/post/', methods=['POST'])
@@ -258,8 +275,7 @@ def post_command():
         return jsonify(guess(userid, wordid, guessword))
 
     if command == "stats":
-
-        # A welcome message to test our server
+        return jsonify(stats(userid))
 
 
 @app.route('/')
