@@ -117,7 +117,9 @@ def newword(id):
     h = str(uuid4())  # hashing won't work for "closeness"
 
     # add the word to this user's list
-    userwords[user['userid']][h] = newword
+    print(userwords[id])
+    userwords[id][h] = [0, False]
+    print(userwords[id])
 
     # add the word to this user's list in the database
     u = info.find_one({"userid": id})  # find the user in the database
@@ -154,6 +156,8 @@ def guess(userid, wordid, guess):
     print(f"guessing {userid} {wordid} {guess}")
 
     if wordid not in userwords[userid].keys():
+        print(wordid)
+        print(userwords[userid].keys())
         print("Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words")
         return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
 
