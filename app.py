@@ -43,7 +43,29 @@ guesses = set(wordlist['guesses'])
 answers = set(wordlist['answers'])
 wordict = dict(wordlist['wordict'])
 
-# print(len(guesses), len(answers))
+
+def reload():
+
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
+    ids = set()
+    userwords = {}
+    nicknameids = {}
+    nicknames = {}
+
+    for user in info.find():
+        # print(f"adding: {user}")
+        ids.add(user['userid'])
+        userwords[user['userid']] = user['words']
+        if user['nickname'] not in nicknameids:
+            nicknameids[user['nickname']] = list()
+        nicknameids[user['nickname']].append(user['userid'])
+        nicknames[user['userid']] = user['nickname']
+
+    wordlist = words.find_one()
+    guesses = set(wordlist['guesses'])
+    answers = set(wordlist['answers'])
+    wordict = dict(wordlist['wordict'])
 
 
 def newid(nickname="NoNickname"):
@@ -226,7 +248,7 @@ def stats(userid):
 
 commands = set(["newid", "getmyids", "setnickname",
                 "newword", "getmywords", "guess",
-                "stats", "allstats", "allwords"])
+                "stats", "allstats", "allwords", "reload"])
 
 
 @app.route('/', methods=['POST'])
@@ -238,6 +260,10 @@ def post_command():
         return jsonify({
             "ERROR": "please send a valid command."
         })
+
+    if command == "newid":
+        reload()
+        return jsonify({"status": "reloaded"})
 
     if command == "newid":
         return jsonify(newid(rj.get('nickname')))
