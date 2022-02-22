@@ -288,7 +288,7 @@ def post_command():
 @app.route('/')
 def index():
     homepage = "<h1>Welcome to the wordle server!!</h1>\n"
-    homepage += "<h2>This API takes JSON-formatted post only</h2>\n"
+    homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
     homepage += "<h2>Commands</h2>\n"
     homepage += "<ul>\n"
