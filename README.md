@@ -11,3 +11,5 @@
     getmyids takes only a 'nickname' argument and returns a list of all userids that have this nickname
     getmywords takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved
     stats takes a 'userid' and returns your average number of guesses for words you have completed
+    allstats returns all users' nicknames, wordids, # of guesses and whether word was found
+    allwords returns a list of all possible words
