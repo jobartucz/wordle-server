@@ -227,11 +227,11 @@ def post_command():
 
     if command == "newid":
         if rj.get('nickname'):
-            return jsonify(newid(rj.get('nickname')))
+            return jsonify("id:" + newid(rj.get('nickname')))
         else:
-            return jsonify(newid())
+            return jsonify("id:" + newid())
 
-    userid = rj.get('id')
+    userid = rj.get('userid')
     if not userid:
         return jsonify({
             "ERROR": "please send a valid id."
