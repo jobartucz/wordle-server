@@ -220,7 +220,7 @@ commands = set(["newid", "getmyids", "setnickname",
                 "newword", "getmywords", "guess", "stats"])
 
 
-@app.route('/post/', methods=['POST'])
+@app.route('/', methods=['POST'])
 def post_command():
     rj = request.get_json()
     # print(rj)
