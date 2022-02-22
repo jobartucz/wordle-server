@@ -222,7 +222,7 @@ def stats(userid):
 
 
 commands = set(["newid", "getmyids", "setnickname",
-                "newword", "getmywords", "guess", "stats"])
+                "newword", "getmywords", "guess", "stats", "allstats"])
 
 
 @app.route('/', methods=['POST'])
