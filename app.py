@@ -1,5 +1,6 @@
 # app.py
 from random import choice
+from re import S
 from uuid import uuid4
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -26,15 +27,17 @@ info = wordledb['info']
 
 ids = set()
 userwords = {}
+nicknameids = {}
 nicknames = {}
+
 for user in info.find():
     # print(f"adding: {user}")
     ids.add(user['userid'])
     userwords[user['userid']] = user['words']
-    if user['nickname'] not in nicknames:
-        nicknames[user['nickname']] = list()
-    nicknames[user['nickname']].append(user['userid'])
-
+    if user['nickname'] not in nicknameids:
+        nicknameids[user['nickname']] = list()
+    nicknameids[user['nickname']].append(user['userid'])
+    nicknames[user['userid']] = user['nickname']
 
 wordlist = words.find_one()
 guesses = set(wordlist['guesses'])
@@ -51,9 +54,10 @@ def newid(nickname="NoNickname"):
     newid = str(uuid4())
     print(newid)
     ids.add(newid)
-    if nickname not in nicknames:
-        nicknames[nickname] = []
-    nicknames[nickname].append(newid)
+    if nickname not in nicknameids:
+        nicknameids[nickname] = []
+    nicknameids[nickname].append(newid)
+    nicknames[newid] = nickname
 
     newuser['userid'] = newid
     newuser['nickname'] = nickname
@@ -68,8 +72,8 @@ def newid(nickname="NoNickname"):
 
 def getmyids(nickname):
 
-    if nickname in nicknames:
-        return nicknames[nickname]
+    if nickname in nicknameids:
+        return nicknameids[nickname]
     else:
         return []
 
@@ -79,12 +83,13 @@ def setnickname(id, nickname):
         print("Not a valid ID, please use the 'newid' command to generate a new id")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
-    if nickname in nicknames:
-        if id in nicknames[nickname]:
+    if nickname in nicknameids:
+        if id in nicknameids[nickname]:
             print("This ID is already connected to this Nickname")
             return {"ERROR": "This ID is already connected to this Nickname"}
         else:
-            nicknames[nickname].append(id)
+            nicknameids[nickname].append(id)
+    nicknames[id] = nickname
 
     # change the user's nickname in the database
     u = info.find_one({"userid": id})  # find the user in the database
@@ -295,6 +300,15 @@ def index():
     homepage += "<li><strong>guess</strong> takes a 'userid', a 'wordid', and a 'guess'. Returns a 5-digit 'result' where each digit is '1' - correct letter in correct position, '2' - correct letter in wrong position, '3' - letter not in word</li>\n"
     homepage += "<li><strong>stats</strong> takes a 'userid' and returns your average number of guesses for words you have completed</li>\n"
     homepage += "</ul>\n"
+
+    homepage += "<ul>\n"
+    for i in ids:
+        print(i, nicknames[i])
+        s = stats(i)
+        if s['numsolved'] > 0:
+            homepage += f"<li><strong>{nicknames[i]}</strong> has solved {s['numsolved']} with an average of {s['average']}</li>\n"
+    homepage += "</ul>\n"
+
     return homepage
 
 
