@@ -301,6 +301,7 @@ def index():
     homepage += "<li><strong>stats</strong> takes a 'userid' and returns your average number of guesses for words you have completed</li>\n"
     homepage += "</ul>\n"
 
+    homepage += "<h2>Leaderboard</h2>\n"
     homepage += "<ul>\n"
     for i in ids:
         print(i, nicknames[i])
