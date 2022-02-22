@@ -238,6 +238,10 @@ def post_command():
     if command == "newid":
         return jsonify(newid(rj.get('nickname')))
 
+    if command == "stats":
+        return jsonify(info.find())
+
+    # the rest of the commands all require a userid
     userid = rj.get('userid')
     if not userid:
         return jsonify({
@@ -283,9 +287,6 @@ def post_command():
 
     if command == "stats":
         return jsonify(stats(userid))
-
-    if command == "stats":
-        return jsonify(info.find())
 
 
 @app.route('/')
