@@ -191,7 +191,9 @@ def guess(userid, wordid, guess):
     newvalues = {"$set": u}
     info.update_one({"userid": userid}, newvalues)
 
-    return {"result": returnstring}
+    return {"wordid": wordid,
+            "guess": guess.lower(),
+            "result": returnstring}
 
 
 def stats(userid):
