@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 app = Flask(__name__)
 
-
 print()
 
 # Load config from a .env file:
