@@ -3,3 +3,4 @@ gunicorn
 requests
 pymongo[srv]
 python-dotenv
+bson.json_util
