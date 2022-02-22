@@ -63,7 +63,7 @@ def newid(nickname="NoNickname"):
 
     print(f"inserted: {x.inserted_id}")
 
-    return newid
+    return {"userid": newid}
 
 
 def getmyids(nickname):
@@ -77,11 +77,12 @@ def getmyids(nickname):
 def setnickname(id, nickname):
     if id not in ids:
         print("Not a valid ID, please use the 'newid' command to generate a new id")
-        return -1
+        return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
     if nickname in nicknames:
         if id in nicknames[nickname]:
             print("This ID is already connected to this Nickname")
+            return {"ERROR": "This ID is already connected to this Nickname"}
         else:
             nicknames[nickname].append(id)
 
@@ -91,17 +92,19 @@ def setnickname(id, nickname):
     newvalues = {"$set": u}
     info.update_one({"userid": id}, newvalues)
 
+    return {"SUCCESS": nickname}
+
 
 def newword(id):
 
     if id not in ids:
         print("Not a valid ID, please use the 'newid' command to generate a new id")
-        return -1
+        return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
     choicelist = list(answers - set(userwords[user['userid']].keys()))
     if len(choicelist) == 0:
         print("no words left")
-        return NULL
+        return {"ERROR": "No words left"}
 
     newword = choice(choicelist)
 
@@ -129,14 +132,14 @@ def newword(id):
     myquery = {"id": 1}
     words.update_one(myquery, newvalues)
 
-    return h
+    return {"wordid": h}
 
 
 def getmywords(id):
 
     if id not in ids:
         print("Not a valid ID, please use the 'newid' command to generate a new id")
-        return -1
+        return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
     return userwords[id]
 
@@ -147,11 +150,11 @@ def guess(userid, wordid, guess):
 
     if wordid not in userwords[userid].keys():
         print("Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words")
-        return 0
+        return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
 
     if len(guess) != 5:
         print("Hey, that's not a 5-letter word!")
-        return 0
+        return {"ERROR": "Hey, that's not a 5-letter word!"}
 
     numguesses, found = userwords[userid][wordid]
     # print(f"{numguesses}, {found}")
@@ -171,7 +174,7 @@ def guess(userid, wordid, guess):
             # print(i, c)
             if c.isalpha() == False:
                 print("Hey, that's not a letter!")
-                return 0
+                return {"ERROR": "Hey, that's not a letter!"}
             # print(i, c, answer[i])
             if c == answer[i]:
                 returnstring += "1"
@@ -188,7 +191,7 @@ def guess(userid, wordid, guess):
     newvalues = {"$set": u}
     info.update_one({"userid": userid}, newvalues)
 
-    return returnstring
+    return {"result": returnstring}
 
 
 def stats(userid):
@@ -226,16 +229,12 @@ def post_command():
         })
 
     if command == "newid":
-
-        if rj.get('nickname'):
-            return jsonify({"userid": newid(rj.get('nickname'))})
-        else:
-            return jsonify({"userid": newid()})
+        return jsonify(newid(rj.get('nickname')))
 
     userid = rj.get('userid')
     if not userid:
         return jsonify({
-            "ERROR": "please send a valid id."
+            "ERROR": "please send a valid userid."
         })
 
     if command == "getmyids":
