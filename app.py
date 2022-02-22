@@ -241,6 +241,7 @@ def post_command():
     if command == "allstats":
         allstats = {}
         for u in info.find():
+            allstats[u['userid']] = {}
             allstats[u['userid']]['nickname'] = u['nickname']
             allstats[u['userid']]['words'] = u['words']
 
