@@ -84,6 +84,8 @@ def newid(nickname="NoNickname"):
     newuser['nickname'] = nickname
     newuser['words'] = {}
 
+    userwords[newid] = {}
+
     x = info.insert_one(newuser)
 
     print(f"inserted: {x.inserted_id}")
@@ -174,7 +176,7 @@ def getmywords(id):
 
 def guess(userid, wordid, guess):
 
-    print(f"guessing {userid} {wordid} {guess}")
+    # print(f"guessing {userid} {wordid} {guess}")
 
     if wordid not in userwords[userid].keys():
         print(wordid)
@@ -187,7 +189,7 @@ def guess(userid, wordid, guess):
         return {"ERROR": "Hey, that's not a 5-letter word!"}
 
     numguesses, found = userwords[userid][wordid]
-    # print(f"{numguesses}, {found}")
+    print(f"{numguesses}, {found}")
     if found == True:
         print("Hey, you already found this word!")
         return numguesses
@@ -195,6 +197,7 @@ def guess(userid, wordid, guess):
         numguesses += 1
 
     answer = wordict[wordid]
+    print(F"answer: {answer}, guess: {guess}")
     if answer == guess.lower():  # they guessed it
         found = True
         returnstring = "11111"
@@ -212,6 +215,7 @@ def guess(userid, wordid, guess):
                 returnstring += "2"
             else:
                 returnstring += "3"
+    print(f"returnstring: {returnstring}, found: {found}")
 
     # add the guess to this user's list in the database
     u = info.find_one({"userid": userid})  # find the user in the database
@@ -220,6 +224,9 @@ def guess(userid, wordid, guess):
     u['words'][wordid] = [numguesses, found]
     newvalues = {"$set": u}
     info.update_one({"userid": userid}, newvalues)
+
+    userwords[userid][wordid] = [numguesses, found]
+    # print(f"updated {userid} with {newvalues}")
 
     return {"wordid": wordid,
             "guess": guess.lower(),
@@ -261,7 +268,9 @@ def post_command():
             "ERROR": "please send a valid command."
         })
 
-    if command == "newid":
+    print(f"COMMAND: {command}")
+    if command == "reload":
+        print("reloading")
         reload()
         return jsonify({"status": "reloaded"})
 
