@@ -103,7 +103,7 @@ def getmyids(nickname):
 
 def setnickname(id, nickname):
     if id not in ids:
-        print("Not a valid ID, please use the 'newid' command to generate a new id")
+        print(f"* * * * ERROR: {id} a valid ID in {ids}")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
     if nickname in nicknameids:
