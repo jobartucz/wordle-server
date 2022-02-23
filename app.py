@@ -70,6 +70,8 @@ def reload():
 
 def newid(nickname="NoNickname"):
 
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     newuser = {}
 
     newid = str(uuid4())
@@ -95,6 +97,8 @@ def newid(nickname="NoNickname"):
 
 def getmyids(nickname):
 
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     if nickname in nicknameids:
         return nicknameids[nickname]
     else:
@@ -102,6 +106,9 @@ def getmyids(nickname):
 
 
 def setnickname(id, nickname):
+
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     if id not in ids:
         print(f"* * * * ERROR: {id} a valid ID in {ids}")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
@@ -125,6 +132,8 @@ def setnickname(id, nickname):
 
 def newword(id):
 
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     if id not in ids:
         print("Not a valid ID, please use the 'newid' command to generate a new id")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
@@ -136,13 +145,11 @@ def newword(id):
 
     newword = choice(choicelist)
 
-    print(f"userid = {id}, newword = {newword}")
     h = str(uuid4())  # hashing won't work for "closeness"
+    print(f"userid = {id}, newword = {newword}, wordid = {h}")
 
     # add the word to this user's list
-    print(userwords[id])
     userwords[id][h] = [0, False]
-    print(userwords[id])
 
     # add the word to this user's list in the database
     u = info.find_one({"userid": id})  # find the user in the database
@@ -167,6 +174,8 @@ def newword(id):
 
 def getmywords(id):
 
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     if id not in ids:
         print("Not a valid ID, please use the 'newid' command to generate a new id")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
@@ -175,6 +184,8 @@ def getmywords(id):
 
 
 def guess(userid, wordid, guess):
+
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     # print(f"guessing {userid} {wordid} {guess}")
 
@@ -234,6 +245,9 @@ def guess(userid, wordid, guess):
 
 
 def stats(userid):
+
+    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+
     userstats = {}
 
     numsolved = 0
