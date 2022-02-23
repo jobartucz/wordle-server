@@ -1,5 +1,5 @@
 flask
 gunicorn
-requests
+requests==2.22.0
 pymongo[srv]
 python-dotenv
