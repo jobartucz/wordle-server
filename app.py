@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 app = Flask(__name__)
 
-print()
+# print()
 
 # Load config from a .env file:
 load_dotenv()
@@ -75,7 +75,7 @@ def newid(nickname="NoNickname"):
     newuser = {}
 
     newid = str(uuid4())
-    print(newid)
+    # print(newid)
     ids.add(newid)
     if nickname not in nicknameids:
         nicknameids[nickname] = []
@@ -90,7 +90,7 @@ def newid(nickname="NoNickname"):
 
     x = info.insert_one(newuser)
 
-    print(f"inserted: {x.inserted_id}")
+    # print(f"inserted: {x.inserted_id}")
 
     return {"userid": newid}
 
@@ -115,7 +115,8 @@ def setnickname(id, nickname):
 
     if nickname in nicknameids:
         if id in nicknameids[nickname]:
-            print("This ID is already connected to this Nickname")
+            print(
+                f"This ID {id} is already connected to this Nickname {nickname}")
             return {"ERROR": "This ID is already connected to this Nickname"}
         else:
             nicknameids[nickname].append(id)
@@ -146,7 +147,7 @@ def newword(id):
     newword = choice(choicelist)
 
     h = str(uuid4())  # hashing won't work for "closeness"
-    print(f"userid = {id}, newword = {newword}, wordid = {h}")
+    # print(f"userid = {id}, newword = {newword}, wordid = {h}")
 
     # add the word to this user's list
     userwords[id][h] = [0, False]
@@ -177,7 +178,8 @@ def getmywords(id):
     global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     if id not in ids:
-        print("Not a valid ID, please use the 'newid' command to generate a new id")
+        print(
+            f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
         return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
 
     return userwords[id]
@@ -190,9 +192,10 @@ def guess(userid, wordid, guess):
     # print(f"guessing {userid} {wordid} {guess}")
 
     if wordid not in userwords[userid].keys():
-        print(wordid)
-        print(userwords[userid].keys())
-        print("Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words")
+        # print(wordid)
+        # print(userwords[userid].keys())
+        print(
+            f"* * * * ERROR Hey, {wordid} is not {userid}'s word! Use newword to get a new word, or getmywords to see your existing words")
         return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
 
     if len(guess) != 5:
@@ -200,7 +203,7 @@ def guess(userid, wordid, guess):
         return {"ERROR": "Hey, that's not a 5-letter word!"}
 
     numguesses, found = userwords[userid][wordid]
-    print(f"{numguesses}, {found}")
+    # print(f"{numguesses}, {found}")
     if found == True:
         print("Hey, you already found this word!")
         return numguesses
@@ -208,7 +211,7 @@ def guess(userid, wordid, guess):
         numguesses += 1
 
     answer = wordict[wordid]
-    print(F"answer: {answer}, guess: {guess}")
+    # print(F"answer: {answer}, guess: {guess}")
     if answer == guess.lower():  # they guessed it
         found = True
         returnstring = "11111"
@@ -217,7 +220,7 @@ def guess(userid, wordid, guess):
         for i, c in enumerate(guess.lower()):
             # print(i, c)
             if c.isalpha() == False:
-                print("Hey, that's not a letter!")
+                print(f"Hey, that's not a letter in guess: {guess}!")
                 return {"ERROR": "Hey, that's not a letter!"}
             # print(i, c, answer[i])
             if c == answer[i]:
@@ -226,7 +229,7 @@ def guess(userid, wordid, guess):
                 returnstring += "2"
             else:
                 returnstring += "3"
-    print(f"returnstring: {returnstring}, found: {found}")
+    # print(f"returnstring: {returnstring}, found: {found}")
 
     # add the guess to this user's list in the database
     u = info.find_one({"userid": userid})  # find the user in the database
@@ -309,6 +312,7 @@ def post_command():
         return jsonify({
             "ERROR": "please send a valid userid."
         })
+    print(f"    userid: {userid}")
 
     if command == "getmyids":
         nn = rj.get("nickname")
