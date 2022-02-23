@@ -136,8 +136,9 @@ def newword(id):
     global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     if id not in ids:
-        print("Not a valid ID, please use the 'newid' command to generate a new id")
-        return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
+        print(
+            f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
+        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     choicelist = list(answers - set(userwords[user['userid']].keys()))
     if len(choicelist) == 0:
@@ -180,7 +181,7 @@ def getmywords(id):
     if id not in ids:
         print(
             f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
-        return {"ERROR": "Not a valid ID, please use the 'newid' command to generate a new id"}
+        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     return userwords[id]
 
