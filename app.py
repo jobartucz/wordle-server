@@ -70,8 +70,7 @@ def setnickname(userid, nickname):
 def newword(userid):
 
     wc = words.find_one()
-    wordict = wc['wordict']
-    answers = wc['guesses']
+    answers = set(wc['guesses'])
 
     user = info.find_one({'userid': userid})
 
@@ -80,7 +79,7 @@ def newword(userid):
         print("no words left")
         return {"ERROR": "No words left"}
 
-    newword = choice(choicelist)
+    nw = choice(choicelist)
 
     h = str(uuid4())  # hashing won't work for "closeness"
     # print(f"userid = {id}, newword = {newword}, wordid = {h}")
@@ -90,13 +89,13 @@ def newword(userid):
     # add the new wordid to the user's list
     user['words'][h] = {"guesses": 0, "found": False}
     newvalues = {"$set": user}
-    info.update_one({"userid": id}, newvalues)
+    info.update_one({"userid": userid}, newvalues)
     # u = info.find_one({"userid":id})
     # print(u)
 
     # add the word to the wordict in the database
     u = words.find_one()
-    u['wordict'][h] = newword
+    u['wordict'][h] = nw
     newvalues = {"$set": u}
     myquery = {"id": 1}
     words.update_one(myquery, newvalues)
@@ -104,18 +103,18 @@ def newword(userid):
     return {"wordid": h}
 
 
-def getmywords(id):
+def getmywords(userid):
 
-    return userwords[id]
+    user = info.find_one({'userid': userid})
+    return {"words": user['words']}
 
 
 def guess(userid, wordid, guess):
 
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
-
+    user = info.find_one({'userid': userid})
     # print(f"guessing {userid} {wordid} {guess}")
 
-    if wordid not in userwords[userid].keys():
+    if wordid not in user['words'].keys():
         # print(wordid)
         # print(userwords[userid].keys())
         print(
@@ -126,7 +125,8 @@ def guess(userid, wordid, guess):
         print("Hey, that's not a 5-letter word!")
         return {"ERROR": "Hey, that's not a 5-letter word!"}
 
-    numguesses, found = userwords[userid][wordid]
+    numguesses = user['words'][wordid]['guesses']
+    found = user['words'][wordid]['found']
     # print(f"{numguesses}, {found}")
     if found == True:
         print("Hey, you already found this word!")
@@ -134,7 +134,8 @@ def guess(userid, wordid, guess):
     else:
         numguesses += 1
 
-    answer = wordict[wordid]
+    wc = words.find_one()
+    answer = wc['wordict'][wordid]
     # print(F"answer: {answer}, guess: {guess}")
     if answer == guess.lower():  # they guessed it
         found = True
@@ -156,15 +157,12 @@ def guess(userid, wordid, guess):
     # print(f"returnstring: {returnstring}, found: {found}")
 
     # add the guess to this user's list in the database
-    u = info.find_one({"userid": userid})  # find the user in the database
     # print(f"{numguesses}, {found}")
     # add the new wordid to the user's list
-    u['words'][wordid] = [numguesses, found]
-    newvalues = {"$set": u}
+    user['words'][wordid]['guesses'] = numguesses
+    user['words'][wordid]['found'] = found
+    newvalues = {"$set": user}
     info.update_one({"userid": userid}, newvalues)
-
-    userwords[userid][wordid] = [numguesses, found]
-    # print(f"updated {userid} with {newvalues}")
 
     return {"wordid": wordid,
             "guess": guess.lower(),
@@ -173,16 +171,16 @@ def guess(userid, wordid, guess):
 
 def stats(userid):
 
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    user = info.find_one({'userid': userid})
 
     userstats = {}
 
     numsolved = 0
     totalguesses = 0
-    for wordid, status in userwords[userid].items():
-        if status[1] == True:
+    for wordid in user['words'].keys():
+        if user['words'][wordid]['found'] == True:
             numsolved += 1
-            totalguesses += status[0]
+            totalguesses += user['words'][wordid]['guesses']
 
     if numsolved == 0:
         userstats['numsolved'] = 0
@@ -215,18 +213,13 @@ commands = set(["newid", "getmyids", "setnickname",
 @app.route('/', methods=['POST'])
 def post_command():
     rj = request.get_json()
-    # print(rj)
+    print(f"POST REQUEST: {rj}")
+
     command = rj.get('command')
     if command not in commands:
         return jsonify({
             "ERROR": "please send a valid command."
         })
-
-    print(f"COMMAND: {command}")
-    if command == "reload":
-        print("reloading")
-        reload()
-        return jsonify({"status": "reloaded"})
 
     if command == "newid":
         return jsonify(newid(rj.get('nickname')))
@@ -241,7 +234,8 @@ def post_command():
         return jsonify(allstats)
 
     if command == "allwords":
-        return jsonify({"answers": list(answers)})
+        wc = words.find_one()
+        return jsonify({"answers": wc['guesses']})
 
     if command == "reset":
         return jsonify(reset())
@@ -252,7 +246,7 @@ def post_command():
         return jsonify({
             "ERROR": "please send a valid userid."
         })
-    print(f"    userid: {userid}")
+    # print(f"    userid: {userid}")
 
     if command == "getmyids":
         nn = rj.get("nickname")
