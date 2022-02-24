@@ -74,8 +74,9 @@ def newid(nickname="NoNickname"):
     newuser = {}
 
     newid = str(uuid4())
-    # print(newid)
+    print(f"------->>>> adding {newid} to {allids}")
     allids.add(newid)
+    print(f"------->>>> result: {allids}")
     if nickname not in nicknameids:
         nicknameids[nickname] = []
     nicknameids[nickname].append(newid)
@@ -85,7 +86,9 @@ def newid(nickname="NoNickname"):
     newuser['nickname'] = nickname
     newuser['words'] = {}
 
+    print(f"------->>>> adding {newid} to {userwords.keys()}")
     userwords[newid] = {}
+    print(f"------->>>> result: {userwords.keys()}")
 
     x = info.insert_one(newuser)
 
