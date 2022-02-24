@@ -24,72 +24,17 @@ wordledb = client['wordle']
 words = wordledb['words']
 info = wordledb['info']
 
-allids = set()
-userwords = {}
-nicknameids = {}
-nicknames = {}
-
-for user in info.find():
-    # print(f"adding: {user}")
-    allids.add(user['userid'])
-    userwords[user['userid']] = user['words']
-    if user['nickname'] not in nicknameids:
-        nicknameids[user['nickname']] = list()
-    nicknameids[user['nickname']].append(user['userid'])
-    nicknames[user['userid']] = user['nickname']
-
-wordlist = words.find_one()
-guesses = set(wordlist['guesses'])
-answers = set(wordlist['answers'])
-wordict = dict(wordlist['wordict'])
-
-
-def reload():
-
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
-
-    userwords = {}
-    nicknameids = {}
-    nicknames = {}
-
-    for user in info.find():
-        # print(f"adding: {user}")
-        allids.add(user['userid'])
-        userwords[user['userid']] = user['words']
-        if user['nickname'] not in nicknameids:
-            nicknameids[user['nickname']] = list()
-        nicknameids[user['nickname']].append(user['userid'])
-        nicknames[user['userid']] = user['nickname']
-
-    wordlist = words.find_one()
-    guesses = set(wordlist['guesses'])
-    answers = set(wordlist['answers'])
-    wordict = dict(wordlist['wordict'])
-
 
 def newid(nickname="NoNickname"):
 
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
-
-    newuser = {}
+    global info
 
     newid = str(uuid4())
-    print(f"------->>>> adding {newid} to {allids}")
-    allids.add(newid)
-    print(f"------->>>> result: {allids}")
-    if nickname not in nicknameids:
-        nicknameids[nickname] = []
-    nicknameids[nickname].append(newid)
-    nicknames[newid] = nickname
 
+    newuser = {}
     newuser['userid'] = newid
     newuser['nickname'] = nickname
     newuser['words'] = {}
-
-    print(f"------->>>> adding {newid} to {userwords.keys()}")
-    userwords[newid] = {}
-    print(f"------->>>> result: {userwords.keys()}")
-
     x = info.insert_one(newuser)
 
     # print(f"inserted: {x.inserted_id}")
@@ -99,52 +44,38 @@ def newid(nickname="NoNickname"):
 
 def getmyids(nickname):
 
-    global nicknameids
+    idlist = []
 
-    if nickname in nicknameids:
-        return nicknameids[nickname]
-    else:
-        return []
+    for user in info.find({'nickname': nickname}):
+        idlist.append(user['userid'])
+
+    return idlist
 
 
-def setnickname(id, nickname):
+def setnickname(userid, nickname):
 
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    userlist = info.find({'userid': userid})
+    for user in userlist:
+        if user['nickname'] != nickname:
 
-    if id not in allids:
-        print(f"* * * * ERROR: {id} a valid ID in {allids}")
-        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
-
-    if nickname in nicknameids:
-        if id in nicknameids[nickname]:
-            print(
-                f"This ID {id} is already connected to this Nickname {nickname}")
-            return {"ERROR": "This ID is already connected to this Nickname"}
-        else:
-            nicknameids[nickname].append(id)
-    nicknames[id] = nickname
-
-    # change the user's nickname in the database
-    u = info.find_one({"userid": id})  # find the user in the database
-    u['nickname'] = nickname  # add the new wordid to the user's list
-    newvalues = {"$set": u}
-    info.update_one({"userid": id}, newvalues)
+            # change the user's nickname in the database
+            u = info.find_one({"userid": id})  # find the user in the database
+            u['nickname'] = nickname  # add the new wordid to the user's list
+            newvalues = {"$set": u}
+            info.update_one({"userid": id}, newvalues)
 
     return {"SUCCESS": nickname}
 
 
-def newword(id):
+def newword(userid):
 
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    wc = words.find_one()
+    wordict = wc['wordict']
+    answers = wc['guesses']
 
-    if id not in allids:
-        print(
-            f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
-        for i in allids:
-            print("---------->>>> ", i, id, type(i), type(id), i == id)
-        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id {allids}"}
+    user = info.find_one({'userid': userid})
 
-    choicelist = list(answers - set(userwords[user['userid']].keys()))
+    choicelist = list(answers - set(user['words'].keys()))
     if len(choicelist) == 0:
         print("no words left")
         return {"ERROR": "No words left"}
@@ -154,19 +85,14 @@ def newword(id):
     h = str(uuid4())  # hashing won't work for "closeness"
     # print(f"userid = {id}, newword = {newword}, wordid = {h}")
 
-    # add the word to this user's list
-    userwords[id][h] = [0, False]
-
     # add the word to this user's list in the database
-    u = info.find_one({"userid": id})  # find the user in the database
-    u['words'][h] = [0, False]  # add the new wordid to the user's list
-    newvalues = {"$set": u}
+    # u = info.find_one({"userid": id})  # find the user in the database
+    # add the new wordid to the user's list
+    user['words'][h] = {"guesses": 0, "found": False}
+    newvalues = {"$set": user}
     info.update_one({"userid": id}, newvalues)
     # u = info.find_one({"userid":id})
     # print(u)
-
-    # add the word to the wordict
-    wordict[h] = newword
 
     # add the word to the wordict in the database
     u = words.find_one()
@@ -179,13 +105,6 @@ def newword(id):
 
 
 def getmywords(id):
-
-    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
-
-    if id not in allids:
-        print(
-            f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
-        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     return userwords[id]
 
