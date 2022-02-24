@@ -48,7 +48,6 @@ def reload():
 
     global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
-    ids = set()
     userwords = {}
     nicknameids = {}
     nicknames = {}
