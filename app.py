@@ -137,7 +137,8 @@ def newword(id):
     if id not in ids:
         print(
             f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
-        print()
+        for i in ids:
+            print(i, id)
         return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     choicelist = list(answers - set(userwords[user['userid']].keys()))
