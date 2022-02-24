@@ -137,6 +137,7 @@ def newword(id):
     if id not in ids:
         print(
             f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
+        print()
         return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     choicelist = list(answers - set(userwords[user['userid']].keys()))
@@ -270,9 +271,22 @@ def stats(userid):
     return userstats
 
 
+def reset():
+    # delete the wordid->word dictionary
+    u = words.find_one({"id": 1})  # find the user in the database
+    u['wordict'] = dict()  # add the new wordid to the user's list
+    newvalues = {"$set": u}
+    words.update_one({"id": 1}, newvalues)
+
+    # Delete all guesses
+    x = info.delete_many({})
+    print(x.deleted_count, " documents deleted.")
+    return {"DELETED": x.deleted_count}
+
+
 commands = set(["newid", "getmyids", "setnickname",
                 "newword", "getmywords", "guess",
-                "stats", "allstats", "allwords", "reload"])
+                "stats", "allstats", "allwords", "reload", "reset"])
 
 
 @app.route('/', methods=['POST'])
@@ -305,6 +319,9 @@ def post_command():
 
     if command == "allwords":
         return jsonify({"answers": list(answers)})
+
+    if command == "reset":
+        return jsonify(reset())
 
     # the rest of the commands all require a userid
     userid = rj.get('userid')
