@@ -24,14 +24,14 @@ wordledb = client['wordle']
 words = wordledb['words']
 info = wordledb['info']
 
-ids = set()
+allids = set()
 userwords = {}
 nicknameids = {}
 nicknames = {}
 
 for user in info.find():
     # print(f"adding: {user}")
-    ids.add(user['userid'])
+    allids.add(user['userid'])
     userwords[user['userid']] = user['words']
     if user['nickname'] not in nicknameids:
         nicknameids[user['nickname']] = list()
@@ -46,7 +46,7 @@ wordict = dict(wordlist['wordict'])
 
 def reload():
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     userwords = {}
     nicknameids = {}
@@ -54,7 +54,7 @@ def reload():
 
     for user in info.find():
         # print(f"adding: {user}")
-        ids.add(user['userid'])
+        allids.add(user['userid'])
         userwords[user['userid']] = user['words']
         if user['nickname'] not in nicknameids:
             nicknameids[user['nickname']] = list()
@@ -69,13 +69,13 @@ def reload():
 
 def newid(nickname="NoNickname"):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     newuser = {}
 
     newid = str(uuid4())
     # print(newid)
-    ids.add(newid)
+    allids.add(newid)
     if nickname not in nicknameids:
         nicknameids[nickname] = []
     nicknameids[nickname].append(newid)
@@ -96,7 +96,7 @@ def newid(nickname="NoNickname"):
 
 def getmyids(nickname):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global nicknameids
 
     if nickname in nicknameids:
         return nicknameids[nickname]
@@ -106,10 +106,10 @@ def getmyids(nickname):
 
 def setnickname(id, nickname):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
-    if id not in ids:
-        print(f"* * * * ERROR: {id} a valid ID in {ids}")
+    if id not in allids:
+        print(f"* * * * ERROR: {id} a valid ID in {allids}")
         return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
 
     if nickname in nicknameids:
@@ -132,14 +132,14 @@ def setnickname(id, nickname):
 
 def newword(id):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
-    if id not in ids:
+    if id not in allids:
         print(
             f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
-        for i in ids:
+        for i in allids:
             print(i, id, type(i), type(id), i == id)
-        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id {ids}"}
+        return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id {allids}"}
 
     choicelist = list(answers - set(userwords[user['userid']].keys()))
     if len(choicelist) == 0:
@@ -177,9 +177,9 @@ def newword(id):
 
 def getmywords(id):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
-    if id not in ids:
+    if id not in allids:
         print(
             f"{id} is not a valid ID, please use the 'newid' command to generate a new id")
         return {"ERROR": f"{id} is not a valid ID, please use the 'newid' command to generate a new id"}
@@ -189,7 +189,7 @@ def getmywords(id):
 
 def guess(userid, wordid, guess):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     # print(f"guessing {userid} {wordid} {guess}")
 
@@ -251,7 +251,7 @@ def guess(userid, wordid, guess):
 
 def stats(userid):
 
-    global ids, userwords, nicknameids, nicknames, guesses, answers, wordict
+    global allids, userwords, nicknameids, nicknames, guesses, answers, wordict
 
     userstats = {}
 
@@ -393,7 +393,7 @@ def index():
 
     homepage += "<h2>Leaderboard</h2>\n"
     homepage += "<ul>\n"
-    for i in ids:
+    for i in allids:
         # print(i, nicknames[i])
         s = stats(i)
         if s['numsolved'] > 0:
