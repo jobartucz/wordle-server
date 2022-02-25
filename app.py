@@ -22,6 +22,7 @@ client = MongoClient(MONGODB_URI)
 
 wordledb = client['wordle']
 words = wordledb['words']
+allwords = set(words['guesses'])
 info = wordledb['info']
 
 
@@ -111,8 +112,18 @@ def getmywords(userid):
 
 def guess(userid, wordid, guess):
 
+    global allwords
     user = info.find_one({'userid': userid})
     # print(f"guessing {userid} {wordid} {guess}")
+
+    if guess not in allwords:
+        print(
+            f"* * * * ERROR Hey, {guess} is not in the list of allowed words. Use the allwords command to get the list of allowed words")
+        return {"ERROR": f"Hey, {guess} is not in the list of allowed words. Use the allwords command to get the list of allowed words"}
+
+    if len(guess) != 5:
+        print("Hey, that's not a 5-letter word!")
+        return {"ERROR": "Hey, that's not a 5-letter word!"}
 
     if wordid not in user['words'].keys():
         # print(wordid)
@@ -120,10 +131,6 @@ def guess(userid, wordid, guess):
         print(
             f"* * * * ERROR Hey, {wordid} is not {userid}'s word! Use newword to get a new word, or getmywords to see your existing words")
         return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
-
-    if len(guess) != 5:
-        print("Hey, that's not a 5-letter word!")
-        return {"ERROR": "Hey, that's not a 5-letter word!"}
 
     numguesses = user['words'][wordid]['guesses']
     found = user['words'][wordid]['found']
@@ -212,6 +219,9 @@ commands = set(["newid", "getmyids", "setnickname",
 
 @app.route('/', methods=['POST'])
 def post_command():
+
+    global allwords
+
     rj = request.get_json()
     print(f"POST REQUEST: {rj}")
 
@@ -234,8 +244,7 @@ def post_command():
         return jsonify(allstats)
 
     if command == "allwords":
-        wc = words.find_one()
-        return jsonify({"answers": wc['guesses']})
+        return jsonify({"answers": list(allwords)})
 
     if command == "reset":
         return jsonify(reset())
