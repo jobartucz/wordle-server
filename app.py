@@ -33,7 +33,7 @@ def newid(nickname="NoNickname"):
 
     global info
 
-    if nickname == NULL:
+    if nickname == None:
         nickname = "NoNickname"
 
     newid = str(uuid4())
