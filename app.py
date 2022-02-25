@@ -6,6 +6,7 @@ from uuid import uuid4
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
+from pymysql import NULL
 app = Flask(__name__)
 
 # print()
@@ -31,6 +32,9 @@ info = wordledb['info']
 def newid(nickname="NoNickname"):
 
     global info
+
+    if nickname == NULL:
+        nickname = "NoNickname"
 
     newid = str(uuid4())
 
@@ -77,7 +81,11 @@ def newword(userid):
 
     user = info.find_one({'userid': userid})
 
-    choicelist = list(allowedanswers - set(user['words'].keys()))
+    if len(user['words']) == 0:
+        choicelist = list(allowedanswers)
+    else:
+        choicelist = list(allowedanswers - set(user['words'].keys()))
+
     if len(choicelist) == 0:
         print("no words left")
         return {"ERROR": "No words left"}
@@ -144,6 +152,11 @@ def guess(userid, wordid, guess):
         numguesses += 1
 
     wc = words.find_one()
+    if wordid not in wc['wordict']:
+        print(
+            f"* * * * ERROR Hey, {wordid} is not a valid word id! Use newword to get a new word, or getmywords to see your existing words")
+        return {"ERROR": f"Hey, {wordid} not a valid word id! Use newword to get a new word, or getmywords to see your existing words"}
+
     answer = wc['wordict'][wordid]
     # print(F"answer: {answer}, guess: {guess}")
     if answer == guess.lower():  # they guessed it
