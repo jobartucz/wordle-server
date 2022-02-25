@@ -221,7 +221,7 @@ commands = set(["newid", "getmyids", "setnickname",
 @app.route('/', methods=['POST'])
 def post_command():
 
-    global allwords
+    global allwords, info
 
     rj = request.get_json()
     print(f"POST REQUEST: {rj}")
@@ -301,6 +301,7 @@ def post_command():
 
 @app.route('/')
 def index():
+    global info
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
     homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
@@ -319,6 +320,11 @@ def index():
 
     homepage += "<h2>Leaderboard</h2>\n"
     homepage += "<ul>\n"
+    allids = set()
+    nicknames = {}
+    for u in info.find():
+        allids.add(u['userid'])
+        nicknames[u['userid']] = u['nickname']
     for i in allids:
         # print(i, nicknames[i])
         s = stats(i)
