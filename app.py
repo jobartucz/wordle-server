@@ -334,6 +334,10 @@ def index():
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
     homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
+    homepage += "<h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>\n"
+    homepage += "<h3>Every time you request a new word, it will randomly select one of the possible answers.</h3>\n"
+    homepage += "<h3>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.</h3>\n"
+    homepage += "<h3>Each unique userid can be associated with a maximum of 1,000 words.</h3>\n"
     homepage += "<h2>Commands</h2>\n"
     homepage += "<ul>\n"
     homepage += "<li><strong>newid</strong> takes an optional 'nickname' argument, returns a new unique 'userid'</li>\n"
@@ -350,7 +354,7 @@ def index():
 
     # calculate all stats
     global info
-    statlist2315 = {}
+    statlist1000 = {}
     statlist100 = {}
     statlist10 = {}
     statlist1 = {}
@@ -362,8 +366,8 @@ def index():
                 numwords += 1
                 numguesses += wval['guesses']
 
-        if numwords == 2315:
-            statlist2315[u['userid']] = {
+        if numwords >= 1000:
+            statlist1000[u['userid']] = {
                 'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
         if numwords >= 100:
             statlist100[u['userid']] = {
@@ -376,9 +380,9 @@ def index():
                 'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
 
     # print the stats in sections
-    homepage += "<h2>Leaderboard for those who have solved all 2315 words:</h2>\n"
+    homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist2315.items(), key=lambda item: item[1]['average']):
+    for s in sorted(statlist1000.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
