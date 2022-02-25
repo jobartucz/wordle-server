@@ -87,15 +87,22 @@ def newword(userid):
             f"* * * * ERROR {userid} is not in the list of users.")
         return {"ERROR": f"{userid} is not in the list of users."}
 
-    if not user['words'] or len(user['words']) == 0:
-        choicelist = list(allowedanswers)
-    else:
-        choicelist = list(allowedanswers - set(user['words'].keys()))
+    # *** JAB allowing duplicates
+    # if not user['words'] or len(user['words']) == 0:
+    #    choicelist = list(allowedanswers)
+    # else:
+    #     choicelist = list(allowedanswers - set(user['words'].keys()))
 
-    if len(choicelist) == 0:
-        print("no words left")
-        return {"ERROR": "No words left"}
+    # if len(choicelist) == 0:
+    #     print("no words left")
+    #     return {"ERROR": "No words left"}
 
+    if len(user['words']) >= 1000:
+        print(
+            f"* * * * ERROR {userid} already has 1000 words assigned. If you haven't solved all of them, use getmywords to see them.")
+        return {"ERROR": f"{userid} already has 1000 words assigned. If you haven't solved all of them, use getmywords to see them."}
+
+    choicelist = list(allowedanswers)
     nw = choice(choicelist)
 
     h = str(uuid4())  # hashing won't work for "closeness"
