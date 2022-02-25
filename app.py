@@ -22,7 +22,8 @@ client = MongoClient(MONGODB_URI)
 
 wordledb = client['wordle']
 words = wordledb['words']
-allwords = set(words['guesses'])
+allwords = set(words.find_one()['guesses'])
+# print(allwords)
 info = wordledb['info']
 
 
@@ -71,11 +72,11 @@ def setnickname(userid, nickname):
 def newword(userid):
 
     wc = words.find_one()
-    answers = set(wc['guesses'])
+    global allwords
 
     user = info.find_one({'userid': userid})
 
-    choicelist = list(answers - set(user['words'].keys()))
+    choicelist = list(allwords - set(user['words'].keys()))
     if len(choicelist) == 0:
         print("no words left")
         return {"ERROR": "No words left"}
