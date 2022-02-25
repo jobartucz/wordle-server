@@ -22,7 +22,8 @@ client = MongoClient(MONGODB_URI)
 
 wordledb = client['wordle']
 words = wordledb['words']
-allwords = set(words.find_one()['guesses'])
+allowedanswers = set(words.find_one()['answers'])
+allowedguesses = set(words.find_one()['guesses'])
 # print(allwords)
 info = wordledb['info']
 
@@ -72,11 +73,11 @@ def setnickname(userid, nickname):
 def newword(userid):
 
     wc = words.find_one()
-    global allwords
+    global allowedanswers
 
     user = info.find_one({'userid': userid})
 
-    choicelist = list(allwords - set(user['words'].keys()))
+    choicelist = list(allowedanswers - set(user['words'].keys()))
     if len(choicelist) == 0:
         print("no words left")
         return {"ERROR": "No words left"}
@@ -113,14 +114,14 @@ def getmywords(userid):
 
 def guess(userid, wordid, guess):
 
-    global allwords
+    global allowedguesses
     user = info.find_one({'userid': userid})
     # print(f"guessing {userid} {wordid} {guess}")
 
-    if guess not in allwords:
+    if guess not in allowedguesses:
         print(
-            f"* * * * ERROR Hey, {guess} is not in the list of allowed words. Use the allwords command to get the list of allowed words")
-        return {"ERROR": f"Hey, {guess} is not in the list of allowed words. Use the allwords command to get the list of allowed words"}
+            f"* * * * ERROR Hey, {guess} is not in the list of allowed words. Use the allguesses command to get the list of allowed words")
+        return {"ERROR": f"Hey, {guess} is not in the list of allowed words. Use the allguesses command to get the list of allowed words"}
 
     if len(guess) != 5:
         print("Hey, that's not a 5-letter word!")
@@ -215,13 +216,13 @@ def reset():
 
 commands = set(["newid", "getmyids", "setnickname",
                 "newword", "getmywords", "guess",
-                "stats", "allstats", "allwords", "reload", "reset"])
+                "stats", "allstats", "allguesses", "allanswers", "reset"])
 
 
 @app.route('/', methods=['POST'])
 def post_command():
 
-    global allwords, info
+    global allowedguesses, allowedanswers, info
 
     rj = request.get_json()
     print(f"POST REQUEST: {rj}")
@@ -244,8 +245,11 @@ def post_command():
 
         return jsonify(allstats)
 
-    if command == "allwords":
-        return jsonify({"answers": list(allwords)})
+    if command == "allguesses":
+        return jsonify({"allguesses": list(allowedguesses)})
+
+    if command == "allanswers":
+        return jsonify({"allanswers": list(allowedanswers)})
 
     if command == "reset":
         return jsonify(reset())
@@ -314,11 +318,13 @@ def index():
     homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
     homepage += "<li><strong>stats</strong> takes a 'userid' and returns the average number of guesses for words completed</li>\n"
     homepage += "<li><strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found</li>\n"
-    homepage += "<li><strong>allwords</strong> returns a list of all possible words</li>\n"
+    homepage += "<li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>\n"
+    homepage += "<li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)</li>\n"
     homepage += "</ul>\n"
 
     # calculate all stats
     global info
+    statlist2315 = {}
     statlist100 = {}
     statlist10 = {}
     statlist1 = {}
@@ -330,6 +336,9 @@ def index():
                 numwords += 1
                 numguesses += wval['guesses']
 
+        if numwords == 2315:
+            statlist2315[u['userid']] = {
+                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
         if numwords >= 100:
             statlist100[u['userid']] = {
                 'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
@@ -341,6 +350,13 @@ def index():
                 'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
 
     # print the stats in sections
+    homepage += "<h2>Leaderboard for those who have solved all 2315 words:</h2>\n"
+    homepage += "<ul>\n"
+    for s in sorted(statlist2315.items(), key=lambda item: item[1]['average']):
+        # print(i, nicknames[i])
+        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+    homepage += "</ul>\n"
+
     homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
     homepage += "<ul>\n"
     for s in sorted(statlist100.items(), key=lambda item: item[1]['average']):
