@@ -78,8 +78,14 @@ def newword(userid):
 
     wc = words.find_one()
     global allowedanswers
+    global info
 
     user = info.find_one({'userid': userid})
+
+    if not user:
+        print(
+            f"* * * * ERROR {userid} is not in the list of users.")
+        return {"ERROR": f"{userid} is not in the list of users."}
 
     if not user['words'] or len(user['words']) == 0:
         choicelist = list(allowedanswers)
