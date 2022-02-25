@@ -301,7 +301,6 @@ def post_command():
 
 @app.route('/')
 def index():
-    global info
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
     homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
@@ -318,18 +317,50 @@ def index():
     homepage += "<li><strong>allwords</strong> returns a list of all possible words</li>\n"
     homepage += "</ul>\n"
 
-    homepage += "<h2>Leaderboard</h2>\n"
-    homepage += "<ul>\n"
-    allids = set()
-    nicknames = {}
+    # calculate all stats
+    global info
+    statlist100 = {}
+    statlist10 = {}
+    statlist1 = {}
     for u in info.find():
-        allids.add(u['userid'])
-        nicknames[u['userid']] = u['nickname']
-    for i in allids:
+        numwords = 0
+        numguesses = 0
+        for wval in u['words'].values():
+            if wval['found'] == True:
+                numwords += 1
+                numguesses += wval['guesses']
+
+        if numwords >= 100:
+            statlist100[u['userid']] = {
+                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+        elif numwords >= 10:
+            statlist10[u['userid']] = {
+                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+        elif numwords >= 1:
+            statlist1[u['userid']] = {
+                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+
+    # print the stats in sections
+    homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
+    homepage += "<ul>\n"
+    for s in sorted(statlist100.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
-        s = stats(i)
-        if s['numsolved'] > 0:
-            homepage += f"<li><strong>{nicknames[i]}</strong> has solved {s['numsolved']} with an average of {s['average']}</li>\n"
+        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+    homepage += "</ul>\n"
+
+    homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
+    homepage += "<ul>\n"
+
+    for s in sorted(statlist10.items(), key=lambda item: item[1]['average']):
+        # print(i, nicknames[i])
+        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+    homepage += "</ul>\n"
+
+    homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
+    homepage += "<ul>\n"
+    for s in sorted(statlist1.items(), key=lambda item: item[1]['average']):
+        # print(i, nicknames[i])
+        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     return homepage
