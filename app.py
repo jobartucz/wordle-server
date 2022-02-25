@@ -81,7 +81,7 @@ def newword(userid):
 
     user = info.find_one({'userid': userid})
 
-    if len(user['words']) == 0:
+    if not user['words'] or len(user['words']) == 0:
         choicelist = list(allowedanswers)
     else:
         choicelist = list(allowedanswers - set(user['words'].keys()))
