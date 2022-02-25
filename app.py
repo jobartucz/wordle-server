@@ -6,7 +6,7 @@ from uuid import uuid4
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-from pymysql import NULL
+from html import escape
 app = Flask(__name__)
 
 # print()
@@ -367,14 +367,14 @@ def index():
     homepage += "<ul>\n"
     for s in sorted(statlist2315.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
     homepage += "<ul>\n"
     for s in sorted(statlist100.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
@@ -382,14 +382,14 @@ def index():
 
     for s in sorted(statlist10.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
     homepage += "<ul>\n"
     for s in sorted(statlist1.items(), key=lambda item: item[1]['average']):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{s[1]['nickname']}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     return homepage
