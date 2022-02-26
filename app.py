@@ -1,4 +1,10 @@
 # app.py
+
+# todo:
+# delete solved words
+# create separate collection for wordict to speed it up
+# use redis instead
+
 import os
 from random import choice
 from re import S
@@ -171,24 +177,36 @@ def guess(userid, wordid, guess):
         return {"ERROR": f"Hey, {wordid} not a valid word id! Use newword to get a new word, or getmywords to see your existing words"}
 
     answer = wc['wordict'][wordid]
-    # print(F"answer: {answer}, guess: {guess}")
+    answerlist = []
     if answer == guess.lower():  # they guessed it
         found = True
         returnstring = "11111"
     else:
-        returnstring = ""
+        returnstring = ['', '', '', '', '']
         for i, c in enumerate(guess.lower()):
             # print(i, c)
             if c.isalpha() == False:
                 print(f"Hey, that's not a letter in guess: {guess}!")
-                return {"ERROR": "Hey, that's not a letter!"}
-            # print(i, c, answer[i])
-            if c == answer[i]:
-                returnstring += "1"
-            elif c in answer:
-                returnstring += "2"
             else:
-                returnstring += "3"
+                answerlist.append(answer[i])
+            # print(i, c, answer[i])
+
+        # we need multiplt passes because of repeated letters in guess that aren't repeated in answer
+        for i, c in enumerate(guess.lower()):
+            if c == answer[i]:
+                returnstring[i] = "1"
+                answerlist[i] = ''
+            elif c not in answer:
+                returnstring[i] = "3"
+
+        for i, c in enumerate(guess.lower()):
+            if returnstring[i] == '':
+                if c in answerlist:
+                    returnstring[i] = "2"
+                    answerlist.remove(c)
+                else:
+                    returnstring[i] = "3"
+
     # print(f"returnstring: {returnstring}, found: {found}")
 
     # add the guess to this user's list in the database
