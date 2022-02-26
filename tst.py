@@ -1,34 +1,44 @@
-while True:
-    answer = input("answer: ")
-    guess = input("guess: ")
-    answerlist = []
-    if answer == guess.lower():  # they guessed it
-        found = True
-        returnstring = "11111"
-    else:
-        returnstring = ['', '', '', '', '']
-        for i, c in enumerate(guess.lower()):
-            # print(i, c)
-            if c.isalpha() == False:
-                print(f"Hey, that's not a letter in guess: {guess}!")
-            else:
-                answerlist.append(answer[i])
-            # print(i, c, answer[i])
+import os
+from random import choice
+from re import S
+from uuid import uuid4
+from pymongo import MongoClient
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+from html import escape
+import redis  # for cacheing pymongo
+from bson.json_util import dumps
+app = Flask(__name__)
 
-        # we need multiplt passes because of repeated letters in guess that aren't repeated in answer
-        for i, c in enumerate(guess.lower()):
-            if c == answer[i]:
-                returnstring[i] = "1"
-                answerlist[i] = ''
-            elif c not in answer:
-                returnstring[i] = "3"
+MONGODB_URI = 'mongodb+srv://mrbartucz:MONGODB7gud3U!@cluster0.wyhau.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+REDIS_URL = 'redis://:pc55ed34c62b32d1a44e0c21db60423039d4ce6d2882f9cd31286b50e7b83dd48@ec2-54-225-230-219.compute-1.amazonaws.com:12449'
 
-        for i, c in enumerate(guess.lower()):
-            if returnstring[i] == '':
-                if c in answerlist:
-                    returnstring[i] = "2"
-                    answerlist.remove(c)
-                else:
-                    returnstring[i] = "3"
 
-    print(returnstring)
+# print()
+
+# Load config from a .env file:
+load_dotenv()
+
+client = MongoClient(MONGODB_URI)
+
+redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+
+
+wordledb = client['wordle']
+words = wordledb['words']
+allowedanswers = set(words.find_one()['answers'])
+allowedguesses = set(words.find_one()['guesses'])
+
+# set up the wordict in redis
+wordict = wordledb['wordict'].find()
+for w in wordict:
+    redisdb.hset("wordict", w['wordid'], w['word'])
+    print(redisdb.hget("word", w['wordid']))
+
+# set up the user info in redis
+info = wordledb['info'].find()
+for i in info:
+    print(i['userid'], 'nickname', i['nickname'])
+    redisdb.hset(f"user:{i['userid']}", 'nickname', i['nickname'])
+    redisdb.hset(f"user:{i['userid']}", 'words', i['words'])
+    print(redisdb.hget(i['userid']))
