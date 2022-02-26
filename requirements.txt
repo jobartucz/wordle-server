@@ -4,3 +4,4 @@ requests==2.22.0
 pymongo[srv]
 python-dotenv
 html
+redis
