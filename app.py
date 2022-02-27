@@ -403,7 +403,6 @@ def post_command():
 @app.route('/')
 def index():
 
-    loadredis()
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
