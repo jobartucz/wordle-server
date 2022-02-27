@@ -1,5 +1,4 @@
 
-
 def newuser(info_col, newid, nickname):
 
     newuser = {}
