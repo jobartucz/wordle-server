@@ -5,5 +5,4 @@ pymongo[srv]
 python-dotenv
 html
 redis
-threading
 json
