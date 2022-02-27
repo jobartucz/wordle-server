@@ -1,0 +1,1 @@
+Calculate stats into redis for home page
