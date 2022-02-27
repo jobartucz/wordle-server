@@ -35,9 +35,10 @@ if 'MONGODB_URI' not in os.environ:
 MONGODB_URI = os.environ['MONGODB_URI']
 mongodb = MongoClient(MONGODB_URI)
 
+
 print("--- Loading RedisDB ---")
-redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
-redisdb.flushall()
+redisdbg = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+redisdbg.flushall()
 
 # cut here
 
@@ -53,31 +54,38 @@ print("--- setting answer sets ---")
 allowedanswers = set(words_col.find_one()['answers'])
 allowedguesses = set(words_col.find_one()['guesses'])
 
-print("--- loading wordict into redis ---")
-# redis db will include a key / val for each wordid to word
-for w in wordict_col.find():
-    # print(w['wordid'])
-    redisdb.set(w['wordid'], w['word'])
 
-# redis db will have a set of all user ids
-# redis db will have a hash of userids to nicknames
-# redis db will have a set for userid:words of all words for that userid
-# redis db will have a hash of userid:wordid to number of guesses and 0/1 whether it's found
-print("--- loading users into redisdb ---")
-for u in info_col.find():
-    print("  >> setting up userid: " + u['userid'])
-    redisdb.sadd('alluserids', u['userid'])
-    redisdb.sadd(u['nickname'], u['userid'])  # add this userid to the set associated with this nickname
-    redisdb.hset(u['userid'], 'nickname', u['nickname'])
-    print("    >> adding words: ")
-    for wid in u['words'].keys():
-        print(f"      >> wordid: {wid}")
-        redisdb.sadd(u['userid']+':words', wid)  # add this wordid to the set of this user's wordids
-        redisdb.hset(u['userid']+':'+wid, 'guesses', u['words'][wid]['guesses'])  # add the number of guesses
-        if u['words'][wid]['found']:
-            redisdb.hset(u['userid']+':'+wid, 'found', 1)  # set the word to found
-        else:
-            redisdb.hset(u['userid']+':'+wid, 'found', 0)  # set the word to not found
+def loadredis():
+
+    global info_col, wordict_col
+
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+
+    print("--- loading wordict into redis ---")
+    # redis db will include a key / val for each wordid to word
+    for w in wordict_col.find():
+        # print(w['wordid'])
+        redisdb.set(w['wordid'], w['word'])
+
+    # redis db will have a set of all user ids
+    # redis db will have a hash of userids to nicknames
+    # redis db will have a set for userid:words of all words for that userid
+    # redis db will have a hash of userid:wordid to number of guesses and 0/1 whether it's found
+    print("--- loading users into redisdb ---")
+    for u in info_col.find():
+        print("  >> setting up userid: " + u['userid'])
+        redisdb.sadd('alluserids', u['userid'])
+        redisdb.sadd(u['nickname'], u['userid'])  # add this userid to the set associated with this nickname
+        redisdb.hset(u['userid'], 'nickname', u['nickname'])
+        print("    >> adding words: ")
+        for wid in u['words'].keys():
+            print(f"      >> wordid: {wid}")
+            redisdb.sadd(u['userid']+':words', wid)  # add this wordid to the set of this user's wordids
+            redisdb.hset(u['userid']+':'+wid, 'guesses', u['words'][wid]['guesses'])  # add the number of guesses
+            if u['words'][wid]['found']:
+                redisdb.hset(u['userid']+':'+wid, 'found', 1)  # set the word to found
+            else:
+                redisdb.hset(u['userid']+':'+wid, 'found', 0)  # set the word to not found
 
 
 def newid(nickname="NoNickname"):
@@ -146,19 +154,15 @@ def newword(userid):
     nw = choice(choicelist)  # the new word
     wordid = str(uuid4())  # the new wordid
 
-    print(f"### NEWWORD ### userid: {userid} nw: {nw} wordid: {wordid}")
+    # print(f"### NEWWORD ### userid: {userid} nw: {nw} wordid: {wordid}")
 
     # add the word to redis
     x = redisdb.set(wordid, nw)
     x = redisdb.sadd(userid + ':words', wordid)  # add this wordid to the set of this user's wordids
-    print(f"x2: {x}")
-    print("Is member? ", redisdb.sismember(userid + ':words', wordid))
     x = redisdb.hset(userid+':'+wordid, 'guesses', 0)  # add the number of guesses
-    print(f"x3: {x}")
     x = redisdb.hset(userid+':'+wordid, 'found', 0)
-    print(f"x4: {x}")
 
-    print(f"added {nw} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
+    print(f"added '{nw}' as {wordid} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
 
     # add the word to the database
     thread = threading.Thread(
@@ -262,10 +266,14 @@ def stats(userid):
     numsolved = 0
     totalguesses = 0
     for wordid in redisdb.smembers(userid + ":words"):
-        if redisdb.hget(u['userid']+':'+wid, 'found') == 1:
+        # print(f"STATS: wordid: {wordid} found: {redisdb.hget(userid+':'+wordid, 'found')}")
+        if redisdb.hget(userid+':'+wordid, 'found') == '1':
+            print(f"STATS: YES!")
             numsolved += 1
-            totalguesses += redisdb.hget(u['userid']+':'+wid, 'guesses')
+            totalguesses += int(redisdb.hget(userid+':'+wordid, 'guesses'))
+            # print(f"STATS: {numsolved} {totalguesses}")
 
+    print(f"STATS: numsolved {numsolved} totalguesses {totalguesses}")
     if numsolved == 0:
         userstats['numsolved'] = 0
         userstats['average'] = 0
@@ -287,6 +295,8 @@ commands = set(["newid", "getmyids", "setnickname",
 
 @app.route('/', methods=['POST'])
 def post_command():
+
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
     global allowedguesses, allowedanswers, incof_col
 
@@ -376,6 +386,9 @@ def post_command():
 
 @app.route('/')
 def index():
+
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
     homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
@@ -398,31 +411,30 @@ def index():
     homepage += "</ul>\n"
 
     # calculate all stats
-    info = json.loads(redisdb.get('info'))
     statlist1000 = {}
     statlist100 = {}
     statlist10 = {}
     statlist1 = {}
-    for u in info.find():
+    for userid in redisdb.smembers('alluserids'):
         numwords = 0
         numguesses = 0
-        for wval in u['words'].values():
-            if wval['found'] == True:
+        for wordid in redisdb.smembers(userid + ":words"):
+            if redisdb.hget(userid+":"+wordid, 'found') == '1':
                 numwords += 1
-                numguesses += wval['guesses']
+                numguesses += int(redisdb.hget(userid+":"+wordid, 'guesses'))
 
         if numwords >= 1000:
-            statlist1000[u['userid']] = {
-                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+            statlist1000[userid] = {
+                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
         if numwords >= 100:
-            statlist100[u['userid']] = {
-                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+            statlist100[userid] = {
+                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
         elif numwords >= 10:
-            statlist10[u['userid']] = {
-                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+            statlist10[userid] = {
+                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
         elif numwords >= 1:
-            statlist1[u['userid']] = {
-                'nickname': u['nickname'], 'numsolved': numwords, 'average': numguesses / numwords}
+            statlist1[userid] = {
+                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
 
     # print the stats in sections
     homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
@@ -458,5 +470,6 @@ def index():
 
 
 if __name__ == '__main__':
+    loadredis()
     # Threaded option to enable multiple instances for multiple user access support
     app.run(threaded=True, port=5000)
