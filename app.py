@@ -60,7 +60,7 @@ def loadredis():
 
     global info_col, wordict_col
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     print("--- loading wordict into redis ---")
     # redis db will include a key / val for each wordid to word
@@ -91,7 +91,7 @@ def loadredis():
 
 def newid(nickname="NoNickname"):
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     if nickname == None:
         nickname = "NoNickname"
@@ -112,14 +112,14 @@ def newid(nickname="NoNickname"):
 
 def getmyids(nickname):
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     return redisdb.smembers(nickname)
 
 
 def setnickname(userid, nickname):
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     redisdb.sadd(nickname, userid)
     redisdb.hset(userid, 'nickname', nickname)
@@ -137,7 +137,7 @@ def newword(userid):
 
     global allowedanswers, wordict_col, info_col
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     alluserids = redisdb.smembers('alluserids')
 
@@ -175,7 +175,7 @@ def newword(userid):
 
 def getmywords(userid):
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     return {"words": redisdb.smembers(userid + ":words")}
 
@@ -184,7 +184,7 @@ def guess(userid, wordid, guess):
 
     global allowedguesses, info_col
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
     # print(f"guessing {userid} {wordid} {guess}")
 
     if guess not in allowedguesses:
@@ -260,7 +260,7 @@ def guess(userid, wordid, guess):
 
 def stats(userid):
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     userstats = {}
 
@@ -297,7 +297,7 @@ commands = set(["newid", "getmyids", "setnickname",
 @app.route('/', methods=['POST'])
 def post_command():
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     global allowedguesses, allowedanswers, incof_col
 
@@ -388,7 +388,7 @@ def post_command():
 @app.route('/')
 def index():
 
-    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
     homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
