@@ -470,7 +470,8 @@ def index():
     return homepage
 
 
+loadredis()
+
 if __name__ == '__main__':
-    loadredis()
     # Threaded option to enable multiple instances for multiple user access support
     app.run(threaded=True, port=5000)
