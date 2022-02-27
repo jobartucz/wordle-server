@@ -61,12 +61,13 @@ def cleanup(info_col, wordict_col):
             if user['words'][wordid]['found'] == 0 or user['words'][wordid]['found'] == '0' or user['words'][wordid]['found'] == False:
                 wordids_to_false.add(wordid)
 
+    info = info_col.find()
     for user in info:
         for wordid in user['words'].keys():
             if wordid in wordids_to_false:
                 user['words'][wordid]['found'] = False
             else:
-                user['words'][wordid]['found'] = False
+                user['words'][wordid]['found'] = True
         newvalues = {"$set": user}
         info_col.update_one({"userid": user['userid']}, newvalues)
 
