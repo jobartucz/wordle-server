@@ -37,7 +37,8 @@ mongodb = MongoClient(MONGODB_URI)
 
 
 print("--- Loading RedisDB ---")
-redisdbg = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+REDIS_URL = os.environ.get("REDIS_URL")
+redisdbg = redis.from_url(REDIS_URL, decode_responses=True)
 redisdbg.flushall()
 
 # cut here
@@ -162,7 +163,7 @@ def newword(userid):
     x = redisdb.hset(userid+':'+wordid, 'guesses', 0)  # add the number of guesses
     x = redisdb.hset(userid+':'+wordid, 'found', 0)
 
-    print(f"added '{nw}' as {wordid} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
+    # print(f"added '{nw}' as {wordid} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
 
     # add the word to the database
     thread = threading.Thread(
