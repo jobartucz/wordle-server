@@ -20,14 +20,16 @@ from bson.json_util import dumps
 import json
 import mongo_tasks
 import threading
+from queue import Queue
+
 
 app = Flask(__name__)
 # print()
 
-statlist1000 = list()
-statlist100 = list()
-statlist10 = list()
-statlist1 = list()
+thread_queue = Queue(maxsize=0)
+thread = threading.Thread(target=mongo_tasks.worker_thread, args=(thread_queue,))
+thread.daemon = True
+thread.start()
 
 # Load config from a .env file:
 load_dotenv()
@@ -45,6 +47,12 @@ print("--- Loading RedisDB ---")
 REDIS_URL = os.environ.get("REDIS_URL")
 redisdbg = redis.from_url(REDIS_URL, decode_responses=True)
 redisdbg.flushall()
+
+# for the stats page
+statlist1000 = list()
+statlist100 = list()
+statlist10 = list()
+statlist1 = list()
 
 # cut here
 
@@ -97,6 +105,8 @@ def loadredis():
 
 def newid(nickname="NoNickname"):
 
+    global thread_queue
+
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     if nickname == None:
@@ -109,9 +119,7 @@ def newid(nickname="NoNickname"):
     redisdb.hset(newid, 'nickname', nickname)
 
     # add the new user to the mongo db
-    thread = threading.Thread(
-        target=mongo_tasks.newuser, args=(info_col, newid, nickname))
-    thread.start()
+    thread_queue.put(('newuser', info_col, newid, nickname))
 
     return {"userid": newid}
 
@@ -125,6 +133,8 @@ def getmyids(nickname):
 
 def setnickname(userid, nickname):
 
+    global thread_queue
+
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     redisdb.sadd(nickname, userid)
@@ -132,14 +142,15 @@ def setnickname(userid, nickname):
 
     # change the user's nickname in the database
     # add the word to the database
-    thread = threading.Thread(
-        target=mongo_tasks.setnickname, args=(info_col, userid, nickname))
-    thread.start()
+
+    thread_queue.put(("setnickname", info_col, userid, nickname))
 
     return {"SUCCESS": nickname}
 
 
 def newword(userid):
+
+    global thread_queue
 
     global allowedanswers, wordict_col, info_col
 
@@ -172,10 +183,9 @@ def newword(userid):
     # print(f"added '{nw}' as {wordid} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
 
     # add the word to the database
-    thread = threading.Thread(
-        target=mongo_tasks.newword, args=(info_col, wordict_col, userid, wordid, nw))
-    thread.start()
+    thread_queue.put(("newword", info_col, wordict_col, userid, wordid, nw))
 
+    print("wordid: ", wordid)
     return {"wordid": wordid}
 
 
@@ -192,6 +202,8 @@ def getmywords(userid):
 
 
 def guess(userid, wordid, guess):
+
+    global thread_queue
 
     global allowedguesses, info_col
 
@@ -262,9 +274,7 @@ def guess(userid, wordid, guess):
     # print(f"returnstring: {returnstring}, numguesses: {guess}, found: {found}")
 
     # add the guess to this user's list in the database
-    thread = threading.Thread(
-        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), found))
-    thread.start()
+    thread_queue.put(("guess", info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), found))
 
     return {"wordid": wordid,
             "guess": guess.lower(),
@@ -298,10 +308,12 @@ def stats(userid):
 
 
 def reset():
+    print("*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!* RESET *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
     mongo_tasks.reset()
 
 
 def cleanup():
+    print("*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!* CLEANUP *!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
     global info_col, wordict_col
     # deletes words not solved from wordict and words
     # deletes users who have solved 1 or 0 words
@@ -443,9 +455,6 @@ def index():
 
     global statlist1000, statlist100, statlist10, statlist1
 
-    thread = threading.Thread(target=recalcstats)
-    thread.start()
-
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
@@ -506,4 +515,4 @@ loadredis()
 
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support
-    app.run(threaded=True, port=5000)
+    app.run(threaded=False, port=5000)

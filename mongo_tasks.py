@@ -12,6 +12,8 @@ def newuser(info_col, newid, nickname):
 
 def newword(info_col, wordict_col, userid, wordid, word):
 
+    print("NEWWORD:", wordid, userid, word)
+
     user = info_col.find_one({"userid": userid})
     # add the word to this user's list in the database
     # u = info.find_one({"userid": id})  # find the user in the database
@@ -23,12 +25,12 @@ def newword(info_col, wordict_col, userid, wordid, word):
     # add the word to the wordict in the database
     x = wordict_col.insert_one({"word": word, "wordid": wordid})
 
-    # print(f"inserted new word into mongodb. word: {word} with id {wordid}: {x.inserted_id}")
+    print(f"insert: {wordid} is {word} with object id: {x.inserted_id}")
 
 
 def guess(info_col, userid, wordid, numguesses, found):
 
-    # print(" * * * * * GUESS: ", info_col, userid, wordid, numguesses, found)
+    # print("GUESS:  ", wordid, userid, numguesses, found)
 
     user = info_col.find_one({"userid": userid})
     if wordid not in user['words']:
@@ -44,7 +46,7 @@ def setnickname(info_col, userid, nickname):
     u = info_col.find_one({"userid": userid})  # find the user in the database
     u['nickname'] = nickname  # add the new wordid to the user's list
     newvalues = {"$set": u}
-    info_col.update_one({"userid": id}, newvalues)
+    info_col.update_one({"userid": userid}, newvalues)
 
 
 def reset():
@@ -53,6 +55,7 @@ def reset():
 
 def cleanup(info_col, wordict_col):
 
+    return
     info = info_col.find()
 
     wordids_to_false = set()
@@ -111,4 +114,43 @@ def cleanup(info_col, wordict_col):
                 info_col.delete_one(myquery)
 
         print(f"Deleted {counter} unused words")
+    return
+
+
+def worker_thread(q):
+
+    while True:
+        task = q.get()
+
+        command = task[0]
+
+        if command == "newuser":
+            info_col = task[1]
+            newid = task[2]
+            nickname = task[3]
+            # print("THREAD CALLING NEWUSER: ", newid, nickname)
+            newuser(info_col, newid, nickname)
+        elif command == "setnickname":
+            info_col = task[1]
+            userid = task[2]
+            nickname = task[3]
+            # print("THREAD CALLING SETNICKNAME: ", userid, nickname)
+            setnickname(info_col, userid, nickname)
+        elif command == "newword":
+            info_col = task[1]
+            wordict_col = task[2]
+            userid = task[3]
+            wordid = task[4]
+            nw = task[5]
+            print("NEWWORD! ", userid, wordid, nw)
+            newword(info_col, wordict_col, userid, wordid, nw)
+        elif command == "guess":
+            info_col = task[1]
+            userid = task[2]
+            wordid = task[3]
+            guesses = task[4]
+            found = task[5]
+            print("GUESS! ", userid, wordid, guesses, found)
+            guess(info_col, userid, wordid, guesses, found)
+
     return
