@@ -177,7 +177,12 @@ def getmywords(userid):
 
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
-    return {"words": list(redisdb.smembers(userid + ":words"))}
+    # return this user's list of words and if they are solved
+    wordlist = {}
+    for wordid in redisdb.smembers(userid + ":words"):
+        wordlist[wordid] = redisdb.hget(userid+":"+wordid, 'found') == '1'
+
+    return {"words": wordlist}
 
 
 def guess(userid, wordid, guess):
