@@ -61,6 +61,7 @@ def loadredis():
     global info_col, wordict_col
 
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
+    redisdb.flushall()
 
     print("--- loading wordict into redis ---")
     # redis db will include a key / val for each wordid to word
@@ -402,6 +403,7 @@ def post_command():
 @app.route('/')
 def index():
 
+    loadredis()
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
