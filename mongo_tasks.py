@@ -30,6 +30,8 @@ def newword(info_col, wordict_col, userid, wordid, word):
 def guess(info_col, userid, wordid, numguesses, found):
 
     user = info_col.find_one({"userid": userid})
+    if wordid not in user['words']:
+        user['words'][wordid] = {}
     user['words'][wordid]['guesses'] = numguesses
     user['words'][wordid]['found'] = found
     newvalues = {"$set": user}
