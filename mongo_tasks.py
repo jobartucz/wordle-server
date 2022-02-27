@@ -12,7 +12,7 @@ def newuser(info_col, newid, nickname):
 
 def newword(info_col, wordict_col, userid, wordid, word):
 
-    print("NEWWORD:", wordid, userid, word)
+    # print("NEWWORD:", wordid, userid, word)
 
     user = info_col.find_one({"userid": userid})
     # add the word to this user's list in the database
@@ -142,7 +142,7 @@ def worker_thread(q):
             userid = task[3]
             wordid = task[4]
             nw = task[5]
-            print("NEWWORD! ", userid, wordid, nw)
+            # print("NEWWORD! ", userid, wordid, nw)
             newword(info_col, wordict_col, userid, wordid, nw)
         elif command == "guess":
             info_col = task[1]
@@ -150,7 +150,7 @@ def worker_thread(q):
             wordid = task[3]
             guesses = task[4]
             found = task[5]
-            print("GUESS! ", userid, wordid, guesses, found)
+            # print("GUESS! ", userid, wordid, guesses, found)
             guess(info_col, userid, wordid, guesses, found)
 
     return
