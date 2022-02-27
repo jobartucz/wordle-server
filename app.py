@@ -2,8 +2,6 @@
 
 # todo:
 # delete solved words
-# create separate collection for wordict to speed it up
-# use redis instead
 
 import json
 from bson.json_util import dumps
@@ -47,12 +45,6 @@ print("--- Loading RedisDB ---")
 REDIS_URL = os.environ.get("REDIS_URL")
 redisdbg = redis.from_url(REDIS_URL, decode_responses=True)
 redisdbg.flushall()
-
-# for the stats page
-statlist1000 = list()
-statlist100 = list()
-statlist10 = list()
-statlist1 = list()
 
 # cut here
 
@@ -320,10 +312,7 @@ def cleanup():
     mongo_tasks.cleanup(info_col, wordict_col)
 
 
-def recalcstats():
-
-    global info_col
-    global statlist1000, statlist100, statlist10, statlist1
+def recalcstats(redisdb):
 
     statlist1000 = list()
     statlist100 = list()
@@ -331,22 +320,27 @@ def recalcstats():
     statlist1 = list()
 
     # calculate all stats
-    for u in info_col.find():
+    for userid in redisdb.smembers('alluserids'):
         numwords = 0
         numguesses = 0
-        for wordid in u['words'].keys():
-            if u['words'][wordid]['found'] == True:
+        for wordid in redisdb.smembers(userid + ":words"):
+            r = redisdb.hgetall(userid+":"+wordid)
+            if r['found'] == '1':
                 numwords += 1
-                numguesses += int(u['words'][wordid]['guesses'])
+                numguesses += int(r['guesses'])
 
         if numwords >= 1000:
-            statlist1000.append((u['nickname'], numwords, numguesses/numwords))
+            print("1000: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            statlist1000.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 100:
-            statlist100.append((u['nickname'], numwords, numguesses/numwords))
+            print("100: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            statlist100.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 10:
-            statlist10.append((u['nickname'], numwords, numguesses/numwords))
+            print("10: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            statlist10.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 1:
-            statlist1.append((u['nickname'], numwords, numguesses/numwords))
+            print("1: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            statlist1.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
 
     return (statlist1000, statlist100, statlist10, statlist1)
 
@@ -453,8 +447,6 @@ def post_command():
 @app.route('/')
 def index():
 
-    global statlist1000, statlist100, statlist10, statlist1
-
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
@@ -481,6 +473,7 @@ def index():
     homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
     homepage += "<ul>\n"
 
+    (statlist1000, statlist100, statlist10, statlist1) = recalcstats(redisdb)
     for s in sorted(statlist1000, key=lambda item: item[1]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
@@ -490,7 +483,7 @@ def index():
     homepage += "<ul>\n"
     for s in sorted(statlist100, key=lambda item: item[1]):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
@@ -498,14 +491,14 @@ def index():
 
     for s in sorted(statlist10, key=lambda item: item[1]):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
     homepage += "<ul>\n"
     for s in sorted(statlist1, key=lambda item: item[1]):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     return homepage
