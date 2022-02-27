@@ -269,12 +269,11 @@ def stats(userid):
     for wordid in redisdb.smembers(userid + ":words"):
         # print(f"STATS: wordid: {wordid} found: {redisdb.hget(userid+':'+wordid, 'found')}")
         if redisdb.hget(userid+':'+wordid, 'found') == '1':
-            print(f"STATS: YES!")
             numsolved += 1
             totalguesses += int(redisdb.hget(userid+':'+wordid, 'guesses'))
             # print(f"STATS: {numsolved} {totalguesses}")
 
-    print(f"STATS: numsolved {numsolved} totalguesses {totalguesses}")
+    # print(f"STATS: numsolved {numsolved} totalguesses {totalguesses}")
     if numsolved == 0:
         userstats['numsolved'] = 0
         userstats['average'] = 0
