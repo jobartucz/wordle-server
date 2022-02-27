@@ -238,6 +238,7 @@ def guess(userid, wordid, guess):
             # print(i, c)
             if c.isalpha() == False:
                 print(f"Hey, that's not a letter in guess: {guess}!")
+                return {"ERROR": f"Hey, that's not a letter in guess: {guess}!"}
             else:
                 answerlist.append(answer[i])
             # print(i, c, answer[i])
@@ -258,7 +259,7 @@ def guess(userid, wordid, guess):
                 else:
                     returnstring[i] = "3"
 
-    # print(f"returnstring: {returnstring}, numguesses: {numguesses}, found: {found}")
+    # print(f"returnstring: {returnstring}, numguesses: {guess}, found: {found}")
 
     # add the guess to this user's list in the database
     thread = threading.Thread(
@@ -324,7 +325,7 @@ def recalcstats():
         for wordid in u['words'].keys():
             if u['words'][wordid]['found'] == True:
                 numwords += 1
-                numguesses += u['words'][wordid]['guesses']
+                numguesses += int(u['words'][wordid]['guesses'])
 
         if numwords >= 1000:
             statlist1000.append((u['nickname'], numwords, numguesses/numwords))
