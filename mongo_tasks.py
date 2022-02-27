@@ -54,41 +54,59 @@ def cleanup(info_col, wordict_col):
 
     info = info_col.find()
 
-    wordids_with_guesses = set()
-    userids_to_delete = set()
+    wordids_to_false = set()
 
     for user in info:
-        wordids_to_delete = set()
         for wordid in user['words'].keys():
-            if user['words'][wordid]['guesses'] == 0:
-                wordids_to_delete.add(wordid)
+            if user['words'][wordid]['found'] == 0 or user['words'][wordid]['found'] == '0' or user['words'][wordid]['found'] == False:
+                wordids_to_false.add(wordid)
+
+    for user in info:
+        for wordid in user['words'].keys():
+            if wordid in wordids_to_false:
+                user['words'][wordid]['found'] = False
             else:
-                wordids_with_guesses.add(wordid)
+                user['words'][wordid]['found'] = False
+        newvalues = {"$set": user}
+        info_col.update_one({"userid": user['userid']}, newvalues)
 
-        for wordid in wordids_to_delete:
-            del user['words'][wordid]
-            newvalues = {"$set": user}
-            info_col.update_one({"userid": user['userid']}, newvalues)
+    do_delete = False
+    if do_delete:
+        wordids_with_guesses = set()
+        userids_to_delete = set()
 
-        if len(user['words'].keys()) < 2:
-            userids_to_delete.add(user['userid'])
+        for user in info:
+            wordids_to_delete = set()
+            for wordid in user['words'].keys():
+                if user['words'][wordid]['guesses'] == 0:
+                    wordids_to_delete.add(wordid)
+                else:
+                    wordids_with_guesses.add(wordid)
 
-    for userid in userids_to_delete:
-        myquery = {"userid": userid}
-        print(f"Deleting userid: {userid}")
-        info_col.delete_one(myquery)
-    print(f"Deleted {len(userids_to_delete)} users...")
+            for wordid in wordids_to_delete:
+                del user['words'][wordid]
+                newvalues = {"$set": user}
+                info_col.update_one({"userid": user['userid']}, newvalues)
 
-    print(f"Found {len(wordids_with_guesses)} words to save")
+            if len(user['words'].keys()) < 2:
+                userids_to_delete.add(user['userid'])
 
-    counter = 0
-    wordict = wordict_col.find()
-    for word in wordict:
-        if word['wordid'] not in wordids_with_guesses:
-            # print(f"deleting {word['word']}, {word['wordid']}")
-            counter += 1
-            myquery = {"wordid": wordid}
+        for userid in userids_to_delete:
+            myquery = {"userid": userid}
+            print(f"Deleting userid: {userid}")
             info_col.delete_one(myquery)
+        print(f"Deleted {len(userids_to_delete)} users...")
 
-    print(f"Deleted {counter} unused words")
+        print(f"Found {len(wordids_with_guesses)} words to save")
+
+        counter = 0
+        wordict = wordict_col.find()
+        for word in wordict:
+            if word['wordid'] not in wordids_with_guesses:
+                # print(f"deleting {word['word']}, {word['wordid']}")
+                counter += 1
+                myquery = {"wordid": wordid}
+                info_col.delete_one(myquery)
+
+        print(f"Deleted {counter} unused words")
     return
