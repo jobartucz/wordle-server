@@ -130,3 +130,6 @@ dmypy.json
 
 # mongodb suff
 mongodb.env
+
+# test file
+tst.py
