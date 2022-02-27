@@ -79,11 +79,13 @@ def cleanup(info_col, wordict_col):
         info_col.delete_one(myquery)
     print(f"Deleted {len(userids_to_delete)} users...")
 
+    print(f"Found {len(wordids_with_guesses)} words to save")
+
     counter = 0
     wordict = wordict_col.find()
     for word in wordict:
         if word['wordid'] not in wordids_with_guesses:
-            print(f"deleting {word['word']}, {word['wordid']}")
+            # print(f"deleting {word['word']}, {word['wordid']}")
             counter += 1
             myquery = {"wordid": wordid}
             info_col.delete_one(myquery)
