@@ -24,6 +24,11 @@ import threading
 app = Flask(__name__)
 # print()
 
+statlist1000 = list()
+statlist100 = list()
+statlist10 = list()
+statlist1 = list()
+
 # Load config from a .env file:
 load_dotenv()
 
@@ -256,7 +261,7 @@ def guess(userid, wordid, guess):
 
     # add the guess to this user's list in the database
     thread = threading.Thread(
-        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), redisdb.hget(userid+':'+wordid, 'found')))
+        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), int(redisdb.hget(userid+':'+wordid, 'found')) == 1))
     thread.start()
 
     return {"wordid": wordid,
@@ -299,6 +304,37 @@ def cleanup():
     # deletes words not solved from wordict and words
     # deletes users who have solved 1 or 0 words
     mongo_tasks.cleanup(info_col, wordict_col)
+
+
+def recalcstats():
+
+    global info_col
+    global statlist1000, statlist100, statlist10, statlist1
+
+    statlist1000 = list()
+    statlist100 = list()
+    statlist10 = list()
+    statlist1 = list()
+
+    # calculate all stats
+    for u in info_col.find():
+        numwords = 0
+        numguesses = 0
+        for wordid in u['words'].keys():
+            if u['words'][wordid]['found'] == True:
+                numwords += 1
+                numguesses += u['words'][wordid]['guesses']
+
+        if numwords >= 1000:
+            statlist1000.append((u['nickname'], numwords, numguesses/numwords))
+        elif numwords >= 100:
+            statlist100.append((u['nickname'], numwords, numguesses/numwords))
+        elif numwords >= 10:
+            statlist10.append((u['nickname'], numwords, numguesses/numwords))
+        elif numwords >= 1:
+            statlist1.append((u['nickname'], numwords, numguesses/numwords))
+
+    return (statlist1000, statlist100, statlist10, statlist1)
 
 
 commands = set(["newid", "getmyids", "setnickname",
@@ -403,6 +439,11 @@ def post_command():
 @app.route('/')
 def index():
 
+    global statlist1000, statlist100, statlist10, statlist1
+
+    thread = threading.Thread(target=recalcstats)
+    thread.start()
+
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
@@ -425,44 +466,18 @@ def index():
     homepage += "<li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>\n"
     homepage += "<li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)</li>\n"
     homepage += "</ul>\n"
-
-    # calculate all stats
-    statlist1000 = {}
-    statlist100 = {}
-    statlist10 = {}
-    statlist1 = {}
-    for userid in redisdb.smembers('alluserids'):
-        numwords = 0
-        numguesses = 0
-        for wordid in redisdb.smembers(userid + ":words"):
-            if redisdb.hget(userid+":"+wordid, 'found') == '1':
-                numwords += 1
-                numguesses += int(redisdb.hget(userid+":"+wordid, 'guesses'))
-
-        if numwords >= 1000:
-            statlist1000[userid] = {
-                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
-        if numwords >= 100:
-            statlist100[userid] = {
-                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
-        elif numwords >= 10:
-            statlist10[userid] = {
-                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
-        elif numwords >= 1:
-            statlist1[userid] = {
-                'nickname': redisdb.hget(userid, 'nickname'), 'numsolved': numwords, 'average': numguesses / numwords}
-
     # print the stats in sections
     homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist1000.items(), key=lambda item: item[1]['average']):
+
+    for s in sorted(statlist1000, key=lambda item: item[1]):
         # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
+        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist100.items(), key=lambda item: item[1]['average']):
+    for s in sorted(statlist100, key=lambda item: item[1]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
@@ -470,14 +485,14 @@ def index():
     homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
     homepage += "<ul>\n"
 
-    for s in sorted(statlist10.items(), key=lambda item: item[1]['average']):
+    for s in sorted(statlist10, key=lambda item: item[1]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist1.items(), key=lambda item: item[1]['average']):
+    for s in sorted(statlist1, key=lambda item: item[1]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[1]['nickname'])}</strong> has solved {s[1]['numsolved']} with an average of {s[1]['average']}</li>\n"
     homepage += "</ul>\n"
