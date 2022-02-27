@@ -5,6 +5,8 @@
 # create separate collection for wordict to speed it up
 # use redis instead
 
+import json
+from bson.json_util import dumps
 import os
 from random import choice
 from re import S
@@ -13,136 +15,171 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from html import escape
-app = Flask(__name__)
+import redis  # for cacheing pymongo
+from bson.json_util import dumps
+import json
+import mongo_tasks
+import threading
 
+app = Flask(__name__)
 # print()
 
 # Load config from a .env file:
 load_dotenv()
 
+print("--- Loading MongoDB ---")
+if 'MONGODB_URI' not in os.environ:
+    print(f"os.environ: {os.environ} does not contain MONGODB_URI")
+    os.abort()
+
 MONGODB_URI = os.environ['MONGODB_URI']
-# print(MONGODB_URI)
+mongodb = MongoClient(MONGODB_URI)
 
-# Connect to your MongoDB cluster:
+print("--- Loading RedisDB ---")
+redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+redisdb.flushall()
 
-client = MongoClient(MONGODB_URI)
+# cut here
 
-wordledb = client['wordle']
-words = wordledb['words']
-allowedanswers = set(words.find_one()['answers'])
-allowedguesses = set(words.find_one()['guesses'])
-# print(allwords)
-info = wordledb['info']
+wordledb = mongodb['wordle']
+print("--- loading info collection ---")
+info_col = wordledb['info']
+print("--- loading words collection ---")
+words_col = wordledb['words']
+print("--- loading wordict collection ---")
+wordict_col = wordledb['wordict']
+
+print("--- setting answer sets ---")
+allowedanswers = set(words_col.find_one()['answers'])
+allowedguesses = set(words_col.find_one()['guesses'])
+
+print("--- loading wordict into redis ---")
+# redis db will include a key / val for each wordid to word
+for w in wordict_col.find():
+    # print(w['wordid'])
+    redisdb.set(w['wordid'], w['word'])
+
+# redis db will have a set of all user ids
+# redis db will have a hash of userids to nicknames
+# redis db will have a set for userid:words of all words for that userid
+# redis db will have a hash of userid:wordid to number of guesses and 0/1 whether it's found
+print("--- loading users into redisdb ---")
+for u in info_col.find():
+    print("  >> setting up userid: " + u['userid'])
+    redisdb.sadd('alluserids', u['userid'])
+    redisdb.sadd(u['nickname'], u['userid'])  # add this userid to the set associated with this nickname
+    redisdb.hset(u['userid'], 'nickname', u['nickname'])
+    print("    >> adding words: ")
+    for wid in u['words'].keys():
+        print(f"      >> wordid: {wid}")
+        redisdb.sadd(u['userid']+':words', wid)  # add this wordid to the set of this user's wordids
+        redisdb.hset(u['userid']+':'+wid, 'guesses', u['words'][wid]['guesses'])  # add the number of guesses
+        if u['words'][wid]['found']:
+            redisdb.hset(u['userid']+':'+wid, 'found', 1)  # set the word to found
+        else:
+            redisdb.hset(u['userid']+':'+wid, 'found', 0)  # set the word to not found
 
 
 def newid(nickname="NoNickname"):
 
-    global info
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
     if nickname == None:
         nickname = "NoNickname"
 
     newid = str(uuid4())
 
-    newuser = {}
-    newuser['userid'] = newid
-    newuser['nickname'] = nickname
-    newuser['words'] = {}
-    x = info.insert_one(newuser)
+    # add the new user into redis
+    redisdb.sadd('alluserids', newid)
+    redisdb.hset(newid, 'nickname', nickname)
 
-    # print(f"inserted: {x.inserted_id}")
+    # add the new user to the mongo db
+    thread = threading.Thread(
+        target=mongo_tasks.newuser, args=(info_col, newid, nickname))
+    thread.start()
 
     return {"userid": newid}
 
 
 def getmyids(nickname):
 
-    idlist = []
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
-    for user in info.find({'nickname': nickname}):
-        idlist.append(user['userid'])
-
-    return idlist
+    return redisdb.smembers(nickname)
 
 
 def setnickname(userid, nickname):
 
-    userlist = info.find({'userid': userid})
-    for user in userlist:
-        if user['nickname'] != nickname:
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
-            # change the user's nickname in the database
-            u = info.find_one({"userid": id})  # find the user in the database
-            u['nickname'] = nickname  # add the new wordid to the user's list
-            newvalues = {"$set": u}
-            info.update_one({"userid": id}, newvalues)
+    redisdb.sadd(nickname, userid)
+    redisdb.hset(userid, 'nickname', nickname)
+
+    # change the user's nickname in the database
+    # add the word to the database
+    thread = threading.Thread(
+        target=mongo_tasks.setnickname, args=(info_col, userid, nickname))
+    thread.start()
 
     return {"SUCCESS": nickname}
 
 
 def newword(userid):
 
-    wc = words.find_one()
-    global allowedanswers
-    global info
+    global allowedanswers, wordict_col, info_col
 
-    user = info.find_one({'userid': userid})
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
-    if not user:
+    alluserids = redisdb.smembers('alluserids')
+
+    if userid not in alluserids:
         print(
             f"* * * * ERROR {userid} is not in the list of users.")
         return {"ERROR": f"{userid} is not in the list of users."}
 
-    # *** JAB allowing duplicates
-    # if not user['words'] or len(user['words']) == 0:
-    #    choicelist = list(allowedanswers)
-    # else:
-    #     choicelist = list(allowedanswers - set(user['words'].keys()))
-
-    # if len(choicelist) == 0:
-    #     print("no words left")
-    #     return {"ERROR": "No words left"}
-
-    if len(user['words']) >= 1000:
+    if len(redisdb.smembers(userid + ":words")) >= 1000:
         print(
             f"* * * * ERROR {userid} already has 1000 words assigned. If you haven't solved all of them, use getmywords to see them.")
         return {"ERROR": f"{userid} already has 1000 words assigned. If you haven't solved all of them, use getmywords to see them."}
 
     choicelist = list(allowedanswers)
-    nw = choice(choicelist)
+    nw = choice(choicelist)  # the new word
+    wordid = str(uuid4())  # the new wordid
 
-    h = str(uuid4())  # hashing won't work for "closeness"
-    # print(f"userid = {id}, newword = {newword}, wordid = {h}")
+    print(f"### NEWWORD ### userid: {userid} nw: {nw} wordid: {wordid}")
 
-    # add the word to this user's list in the database
-    # u = info.find_one({"userid": id})  # find the user in the database
-    # add the new wordid to the user's list
-    user['words'][h] = {"guesses": 0, "found": False}
-    newvalues = {"$set": user}
-    info.update_one({"userid": userid}, newvalues)
-    # u = info.find_one({"userid":id})
-    # print(u)
+    # add the word to redis
+    x = redisdb.set(wordid, nw)
+    x = redisdb.sadd(userid + ':words', wordid)  # add this wordid to the set of this user's wordids
+    print(f"x2: {x}")
+    print("Is member? ", redisdb.sismember(userid + ':words', wordid))
+    x = redisdb.hset(userid+':'+wordid, 'guesses', 0)  # add the number of guesses
+    print(f"x3: {x}")
+    x = redisdb.hset(userid+':'+wordid, 'found', 0)
+    print(f"x4: {x}")
 
-    # add the word to the wordict in the database
-    u = words.find_one()
-    u['wordict'][h] = nw
-    newvalues = {"$set": u}
-    myquery = {"id": 1}
-    words.update_one(myquery, newvalues)
+    print(f"added {nw} to this user's {userid} words: {redisdb.smembers(userid + ':words')}")
 
-    return {"wordid": h}
+    # add the word to the database
+    thread = threading.Thread(
+        target=mongo_tasks.newword, args=(info_col, wordict_col, userid, wordid, nw))
+    thread.start()
+
+    return {"wordid": wordid}
 
 
 def getmywords(userid):
 
-    user = info.find_one({'userid': userid})
-    return {"words": user['words']}
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
+
+    return {"words": redisdb.smembers(userid + ":words")}
 
 
 def guess(userid, wordid, guess):
 
-    global allowedguesses
-    user = info.find_one({'userid': userid})
+    global allowedguesses, info_col
+
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
     # print(f"guessing {userid} {wordid} {guess}")
 
     if guess not in allowedguesses:
@@ -154,32 +191,29 @@ def guess(userid, wordid, guess):
         print("Hey, that's not a 5-letter word!")
         return {"ERROR": "Hey, that's not a 5-letter word!"}
 
-    if wordid not in user['words'].keys():
-        # print(wordid)
-        # print(userwords[userid].keys())
+    if wordid not in redisdb.smembers(userid + ":words"):
         print(
             f"* * * * ERROR Hey, {wordid} is not {userid}'s word! Use newword to get a new word, or getmywords to see your existing words")
+        print(f" here is that user's wordlist: {redisdb.smembers(userid + ':words')}")
         return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
 
-    numguesses = user['words'][wordid]['guesses']
-    found = user['words'][wordid]['found']
     # print(f"{numguesses}, {found}")
-    if found == True:
+    if redisdb.hget(userid+':'+wordid, 'found') == True:
         print("Hey, you already found this word!")
-        return numguesses
+        return redisdb.hget(userid+':'+wordid, 'guesses')
     else:
-        numguesses += 1
+        redisdb.hincrby(userid+':'+wordid, 'guesses', 1)
 
-    wc = words.find_one()
-    if wordid not in wc['wordict']:
+    if False:  # I don't have a test for this, do I need one?
         print(
             f"* * * * ERROR Hey, {wordid} is not a valid word id! Use newword to get a new word, or getmywords to see your existing words")
         return {"ERROR": f"Hey, {wordid} not a valid word id! Use newword to get a new word, or getmywords to see your existing words"}
 
-    answer = wc['wordict'][wordid]
+    answer = redisdb.get(wordid)
     answerlist = []
     if answer == guess.lower():  # they guessed it
         found = True
+        redisdb.hset(userid+':'+wordid, 'found', 1)
         returnstring = "11111"
     else:
         returnstring = ['', '', '', '', '']
@@ -207,15 +241,12 @@ def guess(userid, wordid, guess):
                 else:
                     returnstring[i] = "3"
 
-    # print(f"returnstring: {returnstring}, found: {found}")
+    # print(f"returnstring: {returnstring}, numguesses: {numguesses}, found: {found}")
 
     # add the guess to this user's list in the database
-    # print(f"{numguesses}, {found}")
-    # add the new wordid to the user's list
-    user['words'][wordid]['guesses'] = numguesses
-    user['words'][wordid]['found'] = found
-    newvalues = {"$set": user}
-    info.update_one({"userid": userid}, newvalues)
+    thread = threading.Thread(
+        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), redisdb.hget(userid+':'+wordid, 'found')))
+    thread.start()
 
     return {"wordid": wordid,
             "guess": guess.lower(),
@@ -224,16 +255,16 @@ def guess(userid, wordid, guess):
 
 def stats(userid):
 
-    user = info.find_one({'userid': userid})
+    redisdb = redis.from_url(os.environ.get("REDIS_URL"), decode_responses=True)
 
     userstats = {}
 
     numsolved = 0
     totalguesses = 0
-    for wordid in user['words'].keys():
-        if user['words'][wordid]['found'] == True:
+    for wordid in redisdb.smembers(userid + ":words"):
+        if redisdb.hget(u['userid']+':'+wid, 'found') == 1:
             numsolved += 1
-            totalguesses += user['words'][wordid]['guesses']
+            totalguesses += redisdb.hget(u['userid']+':'+wid, 'guesses')
 
     if numsolved == 0:
         userstats['numsolved'] = 0
@@ -246,16 +277,7 @@ def stats(userid):
 
 
 def reset():
-    # delete the wordid->word dictionary
-    u = words.find_one({"id": 1})  # find the user in the database
-    u['wordict'] = dict()  # add the new wordid to the user's list
-    newvalues = {"$set": u}
-    words.update_one({"id": 1}, newvalues)
-
-    # Delete all guesses
-    x = info.delete_many({})
-    print(x.deleted_count, " documents deleted.")
-    return {"DELETED": x.deleted_count}
+    mongo_tasks.reset()
 
 
 commands = set(["newid", "getmyids", "setnickname",
@@ -266,10 +288,10 @@ commands = set(["newid", "getmyids", "setnickname",
 @app.route('/', methods=['POST'])
 def post_command():
 
-    global allowedguesses, allowedanswers, info
+    global allowedguesses, allowedanswers, incof_col
 
     rj = request.get_json()
-    print(f"POST REQUEST: {rj}")
+    # print(f"POST REQUEST: {rj}")
 
     command = rj.get('command')
     if command not in commands:
@@ -282,7 +304,7 @@ def post_command():
 
     if command == "allstats":
         allstats = {}
-        for u in info.find():
+        for u in info_col.find():
             allstats[u['userid']] = {}
             allstats[u['userid']]['nickname'] = u['nickname']
             allstats[u['userid']]['words'] = u['words']
@@ -302,7 +324,12 @@ def post_command():
     userid = rj.get('userid')
     if not userid:
         return jsonify({
-            "ERROR": "please send a valid userid."
+            "ERROR": "please send a userid."
+        })
+    if userid not in redisdb.smembers('alluserids'):
+        print(f"* * * * * ERROR: {userid} not in list of all userids. Please send a valid userid.")
+        return jsonify({
+            "ERROR": f"{userid} not in list of all userids. Please send a valid userid."
         })
     # print(f"    userid: {userid}")
 
@@ -310,7 +337,7 @@ def post_command():
         nn = rj.get("nickname")
         if not nn:
             return jsonify({
-                "ERROR": "please send a valid nickname."
+                "ERROR": "please send a nickname."
             })
         else:
             return jsonify(getmyids(nn))
@@ -371,7 +398,7 @@ def index():
     homepage += "</ul>\n"
 
     # calculate all stats
-    global info
+    info = json.loads(redisdb.get('info'))
     statlist1000 = {}
     statlist100 = {}
     statlist10 = {}

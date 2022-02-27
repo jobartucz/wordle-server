@@ -1,7 +1,9 @@
 flask
 gunicorn
-requests==2.22.0
+requests
 pymongo[srv]
 python-dotenv
 html
 redis
+threading
+json

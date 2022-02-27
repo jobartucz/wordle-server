@@ -50,3 +50,22 @@ wordict = json.loads(redisdb.get('wordict'))
 
 for u in info:
     print(u['userid'])
+
+newuser = {}
+newuser['userid'] = 123
+newuser['nickname'] = 'Mr. B'
+newuser['words'] = {}
+
+# add the new user into redis
+info.append(newuser)
+serializedObj = dumps(info)  # serialize object for the set redis.
+# set serialized object to redis server.
+result = redisdb.set('info', serializedObj)
+
+info = json.loads(redisdb.get('info'))
+wordict = json.loads(redisdb.get('wordict'))
+
+for u in info:
+    print(u['userid'])
+
+print()
