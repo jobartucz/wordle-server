@@ -214,7 +214,7 @@ def guess(userid, wordid, guess):
         return {"ERROR": "Hey, that's not your word! Use newword to get a new word, or getmywords to see your existing words"}
 
     # print(f"{numguesses}, {found}")
-    if redisdb.hget(userid+':'+wordid, 'found') == True:
+    if int(redisdb.hget(userid+':'+wordid, 'found')) == 1:
         print("Hey, you already found this word!")
         return redisdb.hget(userid+':'+wordid, 'guesses')
     else:
@@ -227,6 +227,7 @@ def guess(userid, wordid, guess):
 
     answer = redisdb.get(wordid)
     answerlist = []
+    found = False
     if answer == guess.lower():  # they guessed it
         found = True
         redisdb.hset(userid+':'+wordid, 'found', 1)
@@ -261,7 +262,7 @@ def guess(userid, wordid, guess):
 
     # add the guess to this user's list in the database
     thread = threading.Thread(
-        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), int(redisdb.hget(userid+':'+wordid, 'found')) == 1))
+        target=mongo_tasks.guess, args=(info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), found))
     thread.start()
 
     return {"wordid": wordid,
@@ -279,7 +280,7 @@ def stats(userid):
     totalguesses = 0
     for wordid in redisdb.smembers(userid + ":words"):
         # print(f"STATS: wordid: {wordid} found: {redisdb.hget(userid+':'+wordid, 'found')}")
-        if redisdb.hget(userid+':'+wordid, 'found') == '1':
+        if int(redisdb.hget(userid+':'+wordid, 'found')) == 1:
             numsolved += 1
             totalguesses += int(redisdb.hget(userid+':'+wordid, 'guesses'))
             # print(f"STATS: {numsolved} {totalguesses}")
