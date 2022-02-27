@@ -293,8 +293,15 @@ def reset():
     mongo_tasks.reset()
 
 
+def cleanup():
+    global info_col, wordict_col
+    # deletes words not solved from wordict and words
+    # deletes users who have solved 1 or 0 words
+    mongo_tasks.cleanup(info_col, wordict_col)
+
+
 commands = set(["newid", "getmyids", "setnickname",
-                "newword", "getmywords", "guess",
+                "newword", "getmywords", "guess", "cleanup",
                 "stats", "allstats", "allguesses", "allanswers", "reset"])
 
 
@@ -334,6 +341,9 @@ def post_command():
 
     if command == "reset":
         return jsonify(reset())
+
+    if command == "cleanup":
+        return jsonify(cleanup())
 
     # the rest of the commands all require a userid
     userid = rj.get('userid')

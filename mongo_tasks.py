@@ -48,3 +48,45 @@ def setnickname(info_col, userid, nickname):
 
 def reset():
     return
+
+
+def cleanup(info_col, wordict_col):
+
+    info = info_col.find()
+
+    wordids_with_guesses = set()
+    userids_to_delete = set()
+
+    for user in info:
+        wordids_to_delete = set()
+        for wordid in user['words'].keys():
+            if user['words'][wordid]['guesses'] == 0:
+                wordids_to_delete.add(wordid)
+            else:
+                wordids_with_guesses.add(wordid)
+
+        for wordid in wordids_to_delete:
+            del user['words'][wordid]
+            newvalues = {"$set": user}
+            info_col.update_one({"userid": user['userid']}, newvalues)
+
+        if len(user['words'].keys()) < 2:
+            userids_to_delete.add(user['userid'])
+
+    for userid in userids_to_delete:
+        myquery = {"userid": userid}
+        print(f"Deleting userid: {userid}")
+        info_col.delete_one(myquery)
+    print(f"Deleted {len(userids_to_delete)} users...")
+
+    counter = 0
+    wordict = wordict_col.find()
+    for word in wordict:
+        if word['wordid'] not in wordids_with_guesses:
+            print(f"deleting {word['word']}, {word['wordid']}")
+            counter += 1
+            myquery = {"wordid": wordid}
+            info_col.delete_one(myquery)
+
+    print(f"Deleted {counter} unused words")
+    return
