@@ -475,14 +475,14 @@ def index():
     homepage += "<ul>\n"
 
     (statlist1000, statlist100, statlist10, statlist1) = recalcstats(redisdb)
-    for s in sorted(statlist1000, key=lambda item: item[1]):
+    for s in sorted(statlist1000, key=lambda item: item[2]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist100, key=lambda item: item[1]):
+    for s in sorted(statlist100, key=lambda item: item[2]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
@@ -490,14 +490,14 @@ def index():
     homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
     homepage += "<ul>\n"
 
-    for s in sorted(statlist10, key=lambda item: item[1]):
+    for s in sorted(statlist10, key=lambda item: item[2]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
 
     homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
     homepage += "<ul>\n"
-    for s in sorted(statlist1, key=lambda item: item[1]):
+    for s in sorted(statlist1, key=lambda item: item[2]):
         # print(i, nicknames[i])
         homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
     homepage += "</ul>\n"
