@@ -1,7 +1,9 @@
  # Welcome to the wordle server!!
     
- ### there is an example client here:  https://replit.com/@JohnBartucz/Wordle-Client#main.py
-    
+ ### there are example clients here:
+ #### https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py
+ #### https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js
+ 
  ## This API takes JSON-formatted POST requests only
  ## All items must contain one of the following commands as a 'command' item:
     
