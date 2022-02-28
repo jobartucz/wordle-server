@@ -197,7 +197,7 @@ def guess(userid, wordid, guess):
 
     global thread_queue
 
-    global allowedguesses, info_col
+    global allowedguesses, info_col, wordict_col
 
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
     # print(f"guessing {userid} {wordid} {guess}")
@@ -266,7 +266,8 @@ def guess(userid, wordid, guess):
     # print(f"returnstring: {returnstring}, numguesses: {guess}, found: {found}")
 
     # add the guess to this user's list in the database
-    thread_queue.put(("guess", info_col, userid, wordid, redisdb.hget(userid+':'+wordid, 'guesses'), found))
+    thread_queue.put(("guess", info_col, wordict_col, userid, wordid,
+                      redisdb.hget(userid+':'+wordid, 'guesses'), found))
 
     return {"wordid": wordid,
             "guess": guess.lower(),

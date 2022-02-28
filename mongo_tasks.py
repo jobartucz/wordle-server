@@ -25,10 +25,10 @@ def newword(info_col, wordict_col, userid, wordid, word):
     # add the word to the wordict in the database
     x = wordict_col.insert_one({"word": word, "wordid": wordid})
 
-    print(f"insert: {wordid} is {word} with object id: {x.inserted_id}")
+    # print(f"insert: {wordid} is {word} with object id: {x.inserted_id}")
 
 
-def guess(info_col, userid, wordid, numguesses, found):
+def guess(info_col, wordict_col, userid, wordid, numguesses, found):
 
     # print("GUESS:  ", wordid, userid, numguesses, found)
 
@@ -39,6 +39,11 @@ def guess(info_col, userid, wordid, numguesses, found):
     user['words'][wordid]['found'] = found
     newvalues = {"$set": user}
     info_col.update_one({"userid": userid}, newvalues)
+
+    if found == True:  # we can delete it from the wordict
+        myquery = {"wordid": wordid}
+        # print(f"Deleting found wordid: {wordid}")
+        wordict_col.delete_one(myquery)
 
 
 def setnickname(info_col, userid, nickname):
@@ -146,11 +151,12 @@ def worker_thread(q):
             newword(info_col, wordict_col, userid, wordid, nw)
         elif command == "guess":
             info_col = task[1]
-            userid = task[2]
-            wordid = task[3]
-            guesses = task[4]
-            found = task[5]
+            wordict_col = task[2]
+            userid = task[3]
+            wordid = task[4]
+            guesses = task[5]
+            found = task[6]
             # print("GUESS! ", userid, wordid, guesses, found)
-            guess(info_col, userid, wordid, guesses, found)
+            guess(info_col, wordict_col, userid, wordid, guesses, found)
 
     return
