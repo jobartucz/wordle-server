@@ -467,7 +467,7 @@ def index():
     homepage += "<li > '1' - correct letter in correct position</li>"
     homepage += "<li > '2' - correct letter in wrong position < /li >"
     homepage += "<li > '3' - letter not in word or duplicate letter which already has a 1 or a 2 from above </li >"
-    homepage += "<ul>"
+    homepage += "</ul>"
     homepage += "<li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>\n"
     homepage += "<li><strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this nickname</li>\n"
     homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
@@ -477,8 +477,8 @@ def index():
     homepage += "<li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)</li>\n"
     homepage += "</ul>\n"
     homepage += "<h2>Example clients:</h2>"
-    homepage += "<h2><a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a></h2>"
-    homepage += "<h2><a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a></h2>"
+    homepage += "<h3><a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a></h3>"
+    homepage += "<h3><a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a></h3>"
 
     # print the stats in sections
     homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
