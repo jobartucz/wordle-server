@@ -451,7 +451,7 @@ def index():
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 
     homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
-    homepage += "<h2>This API takes JSON-formatted post requests only (and returns JSON docs)</h2>\n"
+    homepage += "<h2>This API takes JSON-formatted POST requests only (and returns JSON docs)</h2>\n"
     homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
     homepage += "<h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>\n"
     homepage += "<h3>Every time you request a new word, it will randomly select one of the possible answers.</h3>\n"
