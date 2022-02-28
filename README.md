@@ -2,7 +2,7 @@
     
  ### there is an example client here:  https://replit.com/@JohnBartucz/Wordle-Client#main.py
     
- ## This API takes JSON-formatted POST only
+ ## This API takes JSON-formatted POST requests only
  ## All items must contain one of the following commands as a 'command' item:
     
  ### Commands
