@@ -80,19 +80,20 @@ def loadredis():
     # redis db will have a hash of userid:wordid to number of guesses and 0/1 whether it's found
     print("--- loading users into redisdb ---")
     for u in info_col.find():
-        print("  >> setting up userid: " + u['userid'])
+        # print("  >> setting up userid: " + u['userid'])
         redisdb.sadd('alluserids', u['userid'])
         redisdb.sadd(u['nickname'], u['userid'])  # add this userid to the set associated with this nickname
         redisdb.hset(u['userid'], 'nickname', u['nickname'])
-        print("    >> adding words: ")
+        # print("    >> adding words: ")
         for wid in u['words'].keys():
-            print(f"      >> wordid: {wid}")
+            # print(f"      >> wordid: {wid}")
             redisdb.sadd(u['userid']+':words', wid)  # add this wordid to the set of this user's wordids
             redisdb.hset(u['userid']+':'+wid, 'guesses', u['words'][wid]['guesses'])  # add the number of guesses
             if u['words'][wid]['found']:
                 redisdb.hset(u['userid']+':'+wid, 'found', 1)  # set the word to found
             else:
                 redisdb.hset(u['userid']+':'+wid, 'found', 0)  # set the word to not found
+    print("--- done loading redisdb ---")
 
 
 def newid(nickname="NoNickname"):
@@ -331,16 +332,16 @@ def recalcstats(redisdb):
                 numguesses += int(r['guesses'])
 
         if numwords >= 1000:
-            print("1000: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            # print("1000: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
             statlist1000.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 100:
-            print("100: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            # print("100: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
             statlist100.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 10:
-            print("10: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            # print("10: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
             statlist10.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
         elif numwords >= 1:
-            print("1: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
+            # print("1: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
             statlist1.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
 
     return (statlist1000, statlist100, statlist10, statlist1)
@@ -470,6 +471,9 @@ def index():
     homepage += "<li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>\n"
     homepage += "<li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)</li>\n"
     homepage += "</ul>\n"
+    homepage += "<h2>Example client written in Python:</h2>"
+    homepage += "<h2><a href='https://replit.com/@JohnBartucz/Wordle-Client#main.py'>https://replit.com/@JohnBartucz/Wordle-Client#main.py</a></h2>"
+
     # print the stats in sections
     homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
     homepage += "<ul>\n"
