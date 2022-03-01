@@ -348,9 +348,9 @@ def recalcstats():
             statlist1.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
 
     statlist1000.sort(key=lambda item: item[2])
-    statlist1000.sort(key=lambda item: item[2])
-    statlist1000.sort(key=lambda item: item[2])
-    statlist1000.sort(key=lambda item: item[2])
+    statlist100.sort(key=lambda item: item[2])
+    statlist10.sort(key=lambda item: item[2])
+    statlist1.sort(key=lambda item: item[2])
     return (statlist1000, statlist100, statlist10, statlist1)
 
 
