@@ -1,1 +1,3 @@
-Calculate stats into redis for home page
+- Delete solved words and just store stats
+- once a day remove unsolved words from both info and wordict
+
