@@ -5,11 +5,17 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     {% if dev %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% else %}
     <link rel="stylesheet" href="../static/style.css">
     {% endif %}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600&display=swap" rel="stylesheet">
+
     <title>Wordle Programming Challenge!</title>
 </head>
 
@@ -17,7 +23,7 @@
     <nav>
         <!-- hamburger (settings) -->
         <!-- question icon -->
-        <h1 class="title">Wordle</h1>
+        <div class="title">Wordle Programming Challenge</div>
     </nav>
 
     <div class="wordle-line">
