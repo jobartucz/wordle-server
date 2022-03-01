@@ -315,7 +315,7 @@ def cleanup():
     mongo_tasks.cleanup(info_col, wordict_col)
 
 
-def recalcstats(redisdb):
+def recalcstats():
 
     redisdb = redis.from_url(REDIS_URL, decode_responses=True)
 

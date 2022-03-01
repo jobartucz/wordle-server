@@ -2,7 +2,7 @@
 <title>CTECH Wordle Server</title>
 
 <body>
-    <h1>Welcome to the CTECH wordle server!!</h1>\n"
+    <h1>Welcome to the CTECH wordle server!!</h1>
     <h2>This API takes JSON-formatted POST requests only (and returns JSON docs)</h2>
     <h2>All items must contain one of the following commands as a 'command' item:</h2>
     <h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>
@@ -49,29 +49,29 @@
         <li><strong>{{statlist1000[i][0]}}</strong> has solved {{statlist1000[i][1]}} with an average of
             {{statlist1000[i][2]}}</li>
         {%endfor%}
-    </ol>\n"
+    </ol>
 
-    <h2>Leaderboard for those with at least 100 solved words:</h2>\n"
+    <h2>Leaderboard for those with at least 100 solved words:</h2>
     <ol>
         {%for i in range(0, len100)%}
         <li><strong>{{statlist100[i][0]}}</strong> has solved {{statlist100[i][1]}} with an average of
             {{statlist100[i][2]}}</li>
         {%endfor%}
-    </ol>\n"
+    </ol>
 
-    <h2>Leaderboard for those with at least 10 solved words:</h2>\n"
+    <h2>Leaderboard for those with at least 10 solved words:</h2>
     <ol>
         {%for i in range(0, len10)%}
         <li><strong>{{statlist10[i][0]}}</strong> has solved {{statlist10[i][1]}} with an average of
             {{statlist10[i][2]}}</li>
         {%endfor%}
-    </ol>\n"
+    </ol>
 
-    <h2>Leaderboard for those with at least 1 solved word:</h2>\n"
+    <h2>Leaderboard for those with at least 1 solved word:</h2>
     <ol>
         {%for i in range(0, len1)%}
         <li><strong>{{statlist1[i][0]}}</strong> has solved {{statlist1[i][1]}} with an average of
             {{statlist1[i][2]}}</li>
         {%endfor%}
-    </ol>\n"
+    </ol>
 </body>
