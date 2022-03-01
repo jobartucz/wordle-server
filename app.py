@@ -12,6 +12,7 @@ from uuid import uuid4
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
+from flask import render_template
 from html import escape
 import redis  # for cacheing pymongo
 from bson.json_util import dumps
@@ -316,6 +317,8 @@ def cleanup():
 
 def recalcstats(redisdb):
 
+    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
+
     statlist1000 = list()
     statlist100 = list()
     statlist10 = list()
@@ -344,6 +347,10 @@ def recalcstats(redisdb):
             # print("1: ", redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords)
             statlist1.append((redisdb.hget(userid, 'nickname'), numwords, numguesses/numwords))
 
+    statlist1000.sort(key=lambda item: item[2])
+    statlist1000.sort(key=lambda item: item[2])
+    statlist1000.sort(key=lambda item: item[2])
+    statlist1000.sort(key=lambda item: item[2])
     return (statlist1000, statlist100, statlist10, statlist1)
 
 
@@ -449,70 +456,17 @@ def post_command():
 @app.route('/')
 def index():
 
-    redisdb = redis.from_url(REDIS_URL, decode_responses=True)
+    (statlist1000, statlist100, statlist10, statlist1) = recalcstats()
 
-    homepage = "<h1>Welcome to the CTECH wordle server!!</h1>\n"
-    homepage += "<h2>This API takes JSON-formatted POST requests only (and returns JSON docs)</h2>\n"
-    homepage += "<h2>All items must contain one of the following commands as a 'command' item:</h2>\n"
-    homepage += "<h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>\n"
-    homepage += "<h3>Every time you request a new word, it will randomly select one of the possible answers.</h3>\n"
-    homepage += "<h3>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.</h3>\n"
-    homepage += "<h3>Each unique userid can be associated with a maximum of 1,000 words.</h3>\n"
-    homepage += "<h2>Commands</h2>\n"
-    homepage += "<ul>\n"
-    homepage += "<li><strong>newid</strong> takes an optional 'nickname' argument, returns a new unique 'userid'</li>\n"
-    homepage += "<li><strong>newword</strong> takes only a valid 'userid' and returns a unique 'wordid' to use when guessing</li>\n"
-    homepage += "<li><strong>guess</strong> takes a 'userid', a 'wordid', and a 'guess'. Returns a 5-digit 'result' where each digit is:</li>"
-    homepage += "<ul>"
-    homepage += "<li> '1' - correct letter in correct position"
-    homepage += "<li> '2' - correct letter in wrong position"
-    homepage += "<li> '3' - letter not in word or duplicate letter which already has a 1 or a 2 from above"
-    homepage += "</ul>"
-    homepage += "<li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>\n"
-    homepage += "<li><strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this nickname</li>\n"
-    homepage += "<li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved</li>\n"
-    homepage += "<li><strong>stats</strong> takes a 'userid' and returns the average number of guesses for words completed</li>\n"
-    homepage += "<li><strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found</li>\n"
-    homepage += "<li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>\n"
-    homepage += "<li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)</li>\n"
-    homepage += "</ul>\n"
-    homepage += "<h2>Example clients:</h2>"
-    homepage += "<h3><a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a></h3>"
-    homepage += "<h3><a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a></h3>"
-
-    # print the stats in sections
-    homepage += "<h2>Leaderboard for those who have solved 1000 words:</h2>\n"
-    homepage += "<ul>\n"
-
-    (statlist1000, statlist100, statlist10, statlist1) = recalcstats(redisdb)
-    for s in sorted(statlist1000, key=lambda item: item[2]):
-        # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
-    homepage += "</ul>\n"
-
-    homepage += "<h2>Leaderboard for those with at least 100 solved words:</h2>\n"
-    homepage += "<ul>\n"
-    for s in sorted(statlist100, key=lambda item: item[2]):
-        # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
-    homepage += "</ul>\n"
-
-    homepage += "<h2>Leaderboard for those with at least 10 solved words:</h2>\n"
-    homepage += "<ul>\n"
-
-    for s in sorted(statlist10, key=lambda item: item[2]):
-        # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
-    homepage += "</ul>\n"
-
-    homepage += "<h2>Leaderboard for those with at least 1 solved word:</h2>\n"
-    homepage += "<ul>\n"
-    for s in sorted(statlist1, key=lambda item: item[2]):
-        # print(i, nicknames[i])
-        homepage += f"<li><strong>{escape(s[0])}</strong> has solved {s[1]} with an average of {s[2]}</li>\n"
-    homepage += "</ul>\n"
-
-    return homepage
+    return render_template('index.html',
+                           len1000=len(statlist1000),
+                           len100=len(statlist100),
+                           len10=len(statlist10),
+                           len1=len(statlist1),
+                           statlist1000=statlist1000,
+                           statlist100=statlist100,
+                           statlist10=statlist10,
+                           statlist1=statlist1)
 
 
 loadredis()
