@@ -1,0 +1,39 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+}
+
+.wordle-line {
+    display: flex;
+    justify-content: center;
+}
+
+.wordle-word {
+    border: 2px solid #878a8c;
+    font-size: 2rem;
+
+    margin: 2px;
+
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-weight: bolder;
+}
+
+nav {
+    padding: 0 16px;
+    border-bottom: 1px solid #d3d6da;
+    font-family: 'Roboto Slab', serif;
+    margin-bottom: 10px;
+}
+
+/* eventually flexed so this will change */
+nav .title {
+    text-align: center;
+    font-weight: bolder;
+    font-size: 37px;
+}

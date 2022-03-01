@@ -1,14 +1,44 @@
-<!doctype html>
-<title>CTECH Wordle Server</title>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    {% if dev %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% else %}
+    <link rel="stylesheet" href="../static/style.css">
+    {% endif %}
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@600&display=swap" rel="stylesheet">
+
+    <title>Wordle Programming Challenge!</title>
+</head>
 
 <body>
-    <h1>Welcome to the CTECH wordle server!!</h1>
+    <nav>
+        <!-- hamburger (settings) -->
+        <!-- question icon -->
+        <div class="title">Wordle Programming Challenge</div>
+    </nav>
+
+    <div class="wordle-line">
+        <div class="wordle-word">A</div>
+        <div class="wordle-word">B</div>
+        <div class="wordle-word">O</div>
+        <div class="wordle-word">U</div>
+        <div class="wordle-word">T</div>
+    </div>
+
     <h2>This API takes JSON-formatted POST requests only (and returns JSON docs)</h2>
     <h2>All items must contain one of the following commands as a 'command' item:</h2>
     <h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>
     <h3>Every time you request a new word, it will randomly select one of the possible answers.</h3>
-    <h3>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.
-    </h3>
+    <h3>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.</h3>
     <h3>Each unique userid can be associated with a maximum of 1,000 words.</h3>
     <h2>Commands</h2>
     <ul>
@@ -35,43 +65,46 @@
     </ul>
 
     <h2>Example clients:</h2>
-    <h3><a
-            href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a>
+
+    <h3>
+        <a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a>
     </h3>
-    <h3><a
-            href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a>
+    <h3>
+        <a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a>
     </h3>
 
     <!-- print the stats in sections -->
     <h2>Leaderboard for those who have solved 1000 words:</h2>
     <ol>
-        {%for i in range(0, len1000)%}
-        <li><strong>{{statlist1000[i][0]}}</strong> has solved {{statlist1000[i][1]}} with an average of
-            {{statlist1000[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len1000) %}
+        <li><strong>{{ statlist1000[i][0] }}</strong> has solved {{ statlist1000[i][1] }} with an average of
+            {{ statlist1000[i][2] }}</li>
+        {% endfor %}
     </ol>
 
     <h2>Leaderboard for those with at least 100 solved words:</h2>
     <ol>
-        {%for i in range(0, len100)%}
-        <li><strong>{{statlist100[i][0]}}</strong> has solved {{statlist100[i][1]}} with an average of
-            {{statlist100[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len100) %}
+        <li><strong>{{ statlist100[i][0] }}</strong> has solved {{ statlist100[i][1] }} with an average of
+            {{ statlist100[i][2] }}</li>
+        {% endfor %}
     </ol>
 
     <h2>Leaderboard for those with at least 10 solved words:</h2>
     <ol>
-        {%for i in range(0, len10)%}
-        <li><strong>{{statlist10[i][0]}}</strong> has solved {{statlist10[i][1]}} with an average of
-            {{statlist10[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len10) %}
+        <li><strong>{{ statlist10[i][0] }}</strong> has solved {{statlist10[i][1]}} with an average of
+            {{ statlist10[i][2] }}</li>
+        {% endfor %}
     </ol>
 
     <h2>Leaderboard for those with at least 1 solved word:</h2>
     <ol>
-        {%for i in range(0, len1)%}
-        <li><strong>{{statlist1[i][0]}}</strong> has solved {{statlist1[i][1]}} with an average of
-            {{statlist1[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len1) %}
+        <li><strong>{{ statlist1[i][0] }}</strong> has solved {{ statlist1[i][1] }} with an average of
+            {{ statlist1[i][2] }}</li>
+        {% endfor %}
     </ol>
 </body>
+
+</html>
