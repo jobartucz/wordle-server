@@ -1,5 +1,12 @@
-<!doctype html>
-<title>CTECH Wordle Server</title>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Programming Challenge!</title>
+</head>
 
 <body>
     <h1>Welcome to the CTECH wordle server!!</h1>
@@ -53,25 +60,27 @@
 
     <h2>Leaderboard for those with at least 100 solved words:</h2>
     <ol>
-        {%for i in range(0, len100)%}
-        <li><strong>{{statlist100[i][0]}}</strong> has solved {{statlist100[i][1]}} with an average of
-            {{statlist100[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len100) %}
+        <li><strong>{{ statlist100[i][0] }}</strong> has solved {{ statlist100[i][1] }} with an average of
+            {{ statlist100[i][2] }}</li>
+        {% endfor %}
     </ol>
 
     <h2>Leaderboard for those with at least 10 solved words:</h2>
     <ol>
-        {%for i in range(0, len10)%}
-        <li><strong>{{statlist10[i][0]}}</strong> has solved {{statlist10[i][1]}} with an average of
-            {{statlist10[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len10) %}
+        <li><strong>{{ statlist10[i][0] }}</strong> has solved {{statlist10[i][1]}} with an average of
+            {{ statlist10[i][2] }}</li>
+        {% endfor %}
     </ol>
 
     <h2>Leaderboard for those with at least 1 solved word:</h2>
     <ol>
-        {%for i in range(0, len1)%}
-        <li><strong>{{statlist1[i][0]}}</strong> has solved {{statlist1[i][1]}} with an average of
-            {{statlist1[i][2]}}</li>
-        {%endfor%}
+        {% for i in range(0, len1) %}
+        <li><strong>{{ statlist1[i][0] }}</strong> has solved {{ statlist1[i][1] }} with an average of
+            {{ statlist1[i][2] }}</li>
+        {% endfor %}
     </ol>
 </body>
+
+</html>
