@@ -1,4 +1,5 @@
 # app.py
+DEV = False # for absolute css rendering
 
 # todo:
 # delete solved words
@@ -466,7 +467,8 @@ def index():
                            statlist1000=statlist1000,
                            statlist100=statlist100,
                            statlist10=statlist10,
-                           statlist1=statlist1)
+                           statlist1=statlist1,
+                           dev=DEV)
 
 
 loadredis()
