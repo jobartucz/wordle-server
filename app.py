@@ -1,8 +1,4 @@
 # app.py
-
-# todo:
-# delete solved words
-
 import json
 from bson.json_util import dumps
 import os
