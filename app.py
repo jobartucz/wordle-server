@@ -1,26 +1,20 @@
 # app.py
-DEV = False # for absolute css rendering
-
-# todo:
-# delete solved words
-
-import json
-from bson.json_util import dumps
-import os
-from random import choice
-from re import S
-from uuid import uuid4
-from pymongo import MongoClient
-from dotenv import load_dotenv
-from flask import Flask, request, jsonify
-from flask import render_template
-from html import escape
-import redis  # for cacheing pymongo
-from bson.json_util import dumps
-import json
-import mongo_tasks
-import threading
 from queue import Queue
+import threading
+import mongo_tasks
+import redis  # for cacheing pymongo
+from html import escape
+from flask import render_template
+from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+from pymongo import MongoClient
+from uuid import uuid4
+from re import S
+from random import choice
+import os
+from bson.json_util import dumps
+import json
+DEV = False  # for absolute css rendering
 
 
 app = Flask(__name__)
