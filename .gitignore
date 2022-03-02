@@ -133,3 +133,6 @@ mongodb.env
 
 # test file
 tst.py
+
+# certificates
+*.pem

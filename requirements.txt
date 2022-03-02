@@ -2,6 +2,7 @@ flask
 gunicorn
 requests
 pymongo[srv]
+pyopenssl
 python-dotenv
 html
 redis

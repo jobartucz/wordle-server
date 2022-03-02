@@ -29,16 +29,12 @@ thread.start()
 load_dotenv()
 
 print("--- Loading MongoDB ---")
-if 'MONGODB_URI' not in os.environ:
-    print(f"os.environ: {os.environ} does not contain MONGODB_URI")
-    os.abort()
-
-MONGODB_URI = os.environ['MONGODB_URI']
+MONGODB_URI='mongodb://localhost:27017'
 mongodb = MongoClient(MONGODB_URI)
 
 
 print("--- Loading RedisDB ---")
-REDIS_URL = os.environ.get("REDIS_URL")
+REDIS_URL="redis://localhost:6379" 
 redisdbg = redis.from_url(REDIS_URL, decode_responses=True)
 redisdbg.flushall()
 
@@ -470,4 +466,4 @@ loadredis()
 
 if __name__ == '__main__':
     # Threaded option to enable multiple instances for multiple user access support
-    app.run(threaded=False, port=5000)
+    app.run(host="0.0.0.0", port=5000, ssl_context=('/etc/letsencrypt/live/saturn.rochesterschools.org/fullchain.pem', '/etc/letsencrypt/live/saturn.rochesterschools.org/privkey.pem'))
