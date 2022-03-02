@@ -129,6 +129,8 @@ def worker_thread(q):
 
         command = task[0]
 
+        print(f"# # # # # MongoDB Thread adding task: {command} # # # # #")
+
         if command == "newuser":
             info_col = task[1]
             newid = task[2]
