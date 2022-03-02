@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!-- .wordle-line>.wordle-word*5 -->
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -26,85 +27,117 @@
         <div class="title">Wordle Programming Challenge</div>
     </nav>
 
-    <div class="wordle-line">
-        <div class="wordle-word">A</div>
-        <div class="wordle-word">B</div>
-        <div class="wordle-word">O</div>
-        <div class="wordle-word">U</div>
-        <div class="wordle-word">T</div>
-    </div>
-
-    <h2>This API takes JSON-formatted POST requests only (and returns JSON docs)</h2>
-    <h2>All items must contain one of the following commands as a 'command' item:</h2>
-    <h3>You may request the list of all allowed guesses and all possible answers (see below).</h3>
-    <h3>Every time you request a new word, it will randomly select one of the possible answers.</h3>
-    <h3>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.</h3>
-    <h3>Each unique userid can be associated with a maximum of 1,000 words.</h3>
-    <h2>Commands</h2>
-    <ul>
-        <li><strong>newid</strong> takes an optional 'nickname' argument, returns a new unique 'userid'</li>
-        <li><strong>newword</strong> takes only a valid 'userid' and returns a unique 'wordid' to use when guessing</li>
-        <li><strong>guess</strong> takes a 'userid', a 'wordid', and a 'guess'. Returns a 5-digit 'result' where each
-            digit is:</li>
-        <ul>
-            <li> '1' - correct letter in correct position</li>
-            <li> '2' - correct letter in wrong position</li>
-            <li> '3' - letter not in word or duplicate letter which already has a 1 or a 2 from above</li>
-        </ul>
-        <li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>
-        <li><strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this
-            nickname</li>
-        <li><strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and
-            whether they have been solved</li>
-        <li><strong>stats</strong> takes a 'userid' and returns the average number of guesses for words completed</li>
-        <li><strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found
-        </li>
-        <li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>
-        <li><strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of
-            allguesses)</li>
-    </ul>
-
-    <h2>Example clients:</h2>
-
-    <h3>
-        <a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a>
-    </h3>
-    <h3>
-        <a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a>
-    </h3>
-
-    <!-- print the stats in sections -->
-    <h2>Leaderboard for those who have solved 1000 words:</h2>
-    <ol>
-        {% for i in range(0, len1000) %}
-        <li><strong>{{ statlist1000[i][0] }}</strong> has solved {{ statlist1000[i][1] }} with an average of
-            {{ statlist1000[i][2] }}</li>
-        {% endfor %}
-    </ol>
-
-    <h2>Leaderboard for those with at least 100 solved words:</h2>
-    <ol>
-        {% for i in range(0, len100) %}
-        <li><strong>{{ statlist100[i][0] }}</strong> has solved {{ statlist100[i][1] }} with an average of
-            {{ statlist100[i][2] }}</li>
-        {% endfor %}
-    </ol>
-
-    <h2>Leaderboard for those with at least 10 solved words:</h2>
-    <ol>
-        {% for i in range(0, len10) %}
-        <li><strong>{{ statlist10[i][0] }}</strong> has solved {{statlist10[i][1]}} with an average of
-            {{ statlist10[i][2] }}</li>
-        {% endfor %}
-    </ol>
-
-    <h2>Leaderboard for those with at least 1 solved word:</h2>
-    <ol>
-        {% for i in range(0, len1) %}
-        <li><strong>{{ statlist1[i][0] }}</strong> has solved {{ statlist1[i][1] }} with an average of
-            {{ statlist1[i][2] }}</li>
-        {% endfor %}
-    </ol>
+    <main>
+        <div class="wordle-line">
+            <div class="wordle-word">C</div>
+            <div class="wordle-word">O</div>
+            <div class="wordle-word">D</div>
+            <div class="wordle-word">E</div>
+            <div class="wordle-word">S</div>
+        </div>
+        
+        <div class="card">
+            <div>This API takes JSON-formatted POST requests only (and returns JSON docs)</div>
+            <div>All items must contain one of the following commands as a 'command' item:</div>
+            <div>You may request the list of all allowed guesses and all possible answers (see below).</div>
+            <div>Every time you request a new word, it will randomly select one of the possible answers.</div>
+            <div>You may receive a duplicate at some point. This is intentional so that you can not 'cross off' solved words.
+            </div>
+            <div>Each unique userid can be associated with a maximum of 1,000 words.</div>
+            <div class="title">Commands</div>
+            <ul>
+                <li><strong>newid</strong> takes an optional 'nickname' argument, returns a new unique 'userid'</li>
+                <li><strong>newword</strong> takes only a valid 'userid' and returns a unique 'wordid' to use when guessing</li>
+                <li>
+                    <strong>guess</strong> takes a 'userid', a 'wordid', and a 'guess'. Returns a 5-digit 'result' where each digit is:
+                </li>
+                <li>
+                    <ul>
+                        <li>'1' - correct letter in correct position</li>
+                        <li>'2' - correct letter in wrong position</li>
+                        <li>'3' - letter not in word or duplicate letter which already has a 1 or a 2 from above</li>
+                    </ul>
+                </li>
+                <li><strong>setnickname</strong> takes a 'userid' and a 'nickname'</li>
+                <li>
+                    <strong>getmyids</strong> takes only a 'nickname' argument and returns a list of all userids that have this nickname
+                </li>
+                <li>
+                    <strong>getmywords</strong> takes only a 'userid' and returns the list of wordids, number of guesses, and whether they have been solved
+                </li>
+                <li><strong>stats</strong> takes a 'userid' and returns the average number of guesses for words completed</li>
+                <li>
+                    <strong>allstats</strong> returns all users' nicknames, wordids, # of guesses and whether word was found
+                </li>
+                <li><strong>allguesses</strong> returns a list of all possible words you are allowed to guess</li>
+                <li>
+                    <strong>allanswers</strong> returns a list of all possible words that could be an answer (a subset of allguesses)
+                </li>
+            </ul>
+        </div>
+        
+        <div class="wordle-line">
+            <div class="wordle-word">C</div>
+            <div class="wordle-word">O</div>
+            <div class="wordle-word">D</div>
+            <div class="wordle-word">E</div>
+            <div class="wordle-word">S</div>
+        </div>
+        
+        <h3>
+            <a href='https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py'>https://replit.com/@JohnBartucz/Wordle-Client-Python#main.py</a>
+        </h3>
+        <h3>
+            <a href='https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js'>https://replit.com/@JohnBartucz/Wordle-Client-Javascript#index.js</a>
+        </h3>
+        
+        <!-- print the stats in sections -->
+        <div class="wordle-line">
+            <div class="wordle-word">S</div>
+            <div class="wordle-word">T</div>
+            <div class="wordle-word">A</div>
+            <div class="wordle-word">T</div>
+            <div class="wordle-word">S</div>
+        </div>
+        
+        <div class="card">
+            <div class="title">1000+ Solved Words</div>
+            <ol>
+                {% for i in range(0, len1000) %}
+                <li>
+                    <strong>{{ statlist1000[i][0] }}</strong> has solved {{ statlist1000[i][1] }} with an average of {{ statlist1000[i][2] }}
+                </li>
+                {% endfor %}
+            </ol>
+        
+            <div class="title">100+ Solved Words</div>
+            <ol>
+                {% for i in range(0, len100) %}
+                <li>
+                    <strong>{{ statlist100[i][0] }}</strong> has solved {{ statlist100[i][1] }} with an average of {{ statlist100[i][2] }}
+                </li>
+                {% endfor %}
+            </ol>
+        
+            <div class="title">10+ Solved Words</div>
+            <ol>
+                {% for i in range(0, len10) %}
+                <li>
+                    <strong>{{ statlist10[i][0] }}</strong> has solved {{statlist10[i][1]}} with an average of {{ statlist10[i][2] }}
+                </li>
+                {% endfor %}
+            </ol>
+        
+            <div class="title">1+ Solved Word</div>
+            <ol>
+                {% for i in range(0, len1) %}
+                <li>
+                    <strong>{{ statlist1[i][0] }}</strong> has solved {{ statlist1[i][1] }} with an average of {{ statlist1[i][2] }}
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </main>
 </body>
 
 </html>

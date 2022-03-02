@@ -26,9 +26,10 @@ body {
 
 nav {
     padding: 0 16px;
-    border-bottom: 1px solid #d3d6da;
+    border-bottom: 2px solid #d3d6da;
+    background: #f2f2f2;
     font-family: 'Roboto Slab', serif;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 /* eventually flexed so this will change */
@@ -36,4 +37,14 @@ nav .title {
     text-align: center;
     font-weight: bolder;
     font-size: 37px;
+}
+
+main {
+    margin: 0 10%;
+}
+
+.card {
+    margin: 16px 0;
+    border-bottom: 1px solid #d3d6da;
+    border-top: 1px solid #d3d6da;
 }
